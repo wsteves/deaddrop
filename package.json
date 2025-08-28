@@ -1,0 +1,20 @@
+{
+  "name": "polka-kleinanzeigen",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace apps/web run dev",
+    "build:web": "npm --workspace apps/web run build",
+    "dev:server": "npm --workspace apps/server run dev",
+    "build:server": "npm --workspace apps/server run build"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.5"
+  },
+  "dependencies": {
+    "sql.js": "^1.13.0"
+  }
+}
