@@ -1,3 +1,7 @@
+export async function fetchOnchainListings() {
+  const res = await api.get<Listing[]>('/api/listings/onchain');
+  return res.data;
+}
 
 import axios from 'axios';
 
@@ -30,8 +34,13 @@ export async function fetchListing(id: string) {
   return res.data;
 }
 
-export async function createListing(data: Omit<Listing, 'id' | 'createdAt'>) {
-  const res = await api.post<{ id: string; createdAt: number }>('/api/listings', data);
+export interface CreateListingResponse {
+  id: string;
+  createdAt: number;
+  commitHash?: string | null;
+}
+export async function createListing(data: Omit<Listing, 'id' | 'createdAt'>): Promise<CreateListingResponse> {
+  const res = await api.post<CreateListingResponse>('/api/listings', data);
   return res.data;
 }
 

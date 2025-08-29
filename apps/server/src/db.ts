@@ -42,4 +42,9 @@ function saveDatabase() {
   }
 }
 
-export { db, loadDatabase, saveDatabase };
+function getDb() {
+  if (!db) throw new Error('Database not loaded');
+  return db;
+}
+
+export { getDb, loadDatabase, saveDatabase };
