@@ -5,7 +5,7 @@ export async function fetchOnchainListings() {
 
 import axios from 'axios';
 
-export const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
+export const API_BASE = (import.meta as any).env?.VITE_API_BASE || 'http://localhost:4000';
 
 export const api = axios.create({
   baseURL: API_BASE
@@ -23,6 +23,27 @@ export type Listing = {
   createdAt: number;
   commitHash?: string | null;
   blockHash?: string | null;
+}
+
+export type Job = {
+  id: string;
+  title: string;
+  company?: string;
+  location?: string;
+  salary?: number | null;
+  salaryMin?: number | null;
+  salaryMax?: number | null;
+  description?: string;
+  tags?: string;
+  images?: string[];
+  employmentType?: string | null;
+  level?: string | null;
+  remote?: boolean | null;
+  benefits?: string | null;
+  createdAt: number;
+  commitHash?: string | null;
+  blockNumber?: number | null;
+  contact?: string;
 }
 
 export async function fetchListings(params?: { q?: string; region?: string; category?: string; cursor?: string; limit?: number }) {
@@ -52,5 +73,26 @@ export async function saveCommit(id: string, commitHash: string) {
 
 export async function fetchOnchainListingById(id: string) {
   const res = await api.get('/api/listings/onchain', { params: { id } });
+  return res.data;
+}
+
+// Jobs API helpers
+export async function fetchJobs(params?: { q?: string; cursor?: string; limit?: number }) {
+  const res = await api.get<Job[]>('/api/jobs', { params });
+  return res.data;
+}
+
+export async function fetchJob(id: string) {
+  const res = await api.get<Job>(`/api/jobs/${id}`);
+  return res.data;
+}
+
+export async function createJob(data: Omit<Job, 'id' | 'createdAt'>) {
+  const res = await api.post<CreateListingResponse>('/api/jobs', data);
+  return res.data;
+}
+
+export async function saveJobCommit(id: string, commitHash: string, blockHash?: string | null, blockNumber?: number | null, author?: string) {
+  const res = await api.post('/api/jobs/' + id + '/commit', { commitHash, blockHash, blockNumber, author });
   return res.data;
 }

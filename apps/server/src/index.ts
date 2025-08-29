@@ -20,6 +20,19 @@ async function getApi() {
 const isHex = (s: string) => /^0x[0-9a-f]+$/i.test(s ?? '');
 const normalizeHex = (s: string | null | undefined) => (s ? s.toLowerCase() : s);
 
+function normalizeRow(row: any) {
+  if (!row) return row;
+  try {
+    row.images = row.images ? JSON.parse(row.images) : [];
+  } catch { row.images = []; }
+  row.price = row.price != null ? Number(row.price) : null;
+  row.salaryMin = row.salaryMin != null ? Number(row.salaryMin) : null;
+  row.salaryMax = row.salaryMax != null ? Number(row.salaryMax) : null;
+  row.blockNumber = row.blockNumber != null ? Number(row.blockNumber) : null;
+  row.remote = Number(row.remote || 0) === 1;
+  return row;
+}
+
 // Polkadot remarks are `Bytes`. If you originally passed a JSON string, it will be hex here.
 // Decode safely and try JSON.parse on the decoded string.
 function decodeRemark(arg: any): { rawHex: string | null; text: string | null; json: any | null } {
@@ -89,7 +102,8 @@ async function main() {
   //   GET /api/listings/onchain?blockHash=0x..&extrinsicHash=0x..
   //   GET /api/listings/onchain?blockNumber=123456&extrinsicHash=0x..
   //   GET /api/listings/onchain?id=<listing-id>   (reads hashes from DB)
-  app.get('/api/listings/onchain', async (req, reply) => {
+  // Shared on-chain handler for listings/jobs
+  async function handleOnchain(req: any, reply: any) {
     try {
       const api = await getApi();
       const { id, blockHash, blockNumber, extrinsicHash } = (req.query || {}) as any;
@@ -151,7 +165,9 @@ async function main() {
         .code(500)
         .send({ error: 'Failed to fetch on-chain listing remark', details: (err as any)?.message ?? String(err) });
     }
-  });
+  }
+
+  app.get('/api/listings/onchain', handleOnchain);
 
   // ---------------------------------------------------------------------------
   // The rest of your routes stay the same, but 2 small polish items below:
@@ -170,6 +186,67 @@ async function main() {
     req.query = { id } as any;
     return (app as any).routes['GET:/api/listings/onchain']?.handler(req, reply) // Fastify internals differ; simplest is just to re-run logic
       ?? reply.code(400).send({ error: 'Route wiring error' });
+  });
+
+  // ---------------------------------------------------------------------------
+  // COMPAT: expose /api/jobs endpoints that proxy to the listings handlers
+  // This keeps the frontend working while we migrated UI terminology to "jobs".
+  // ---------------------------------------------------------------------------
+  // Reuse listings list handler for jobs
+  app.get('/api/jobs', async (req, reply) => {
+    const { q = '', region = '', category = '', cursor = '', limit = '20' } = req.query as any;
+    // forward to listings logic (duplicate to keep simple)
+    const lim = Math.min(parseInt(limit) || 20, 50);
+    let sql = 'SELECT * FROM listings WHERE 1=1';
+    const params: any[] = [];
+    if (q) { sql += ' AND (title LIKE ? OR description LIKE ?)'; params.push(`%${q}%`, `%${q}%`); }
+    if (region) { sql += ' AND region = ?'; params.push(region); }
+    if (category) { sql += ' AND category = ?'; params.push(category); }
+    if (cursor) { sql += ' AND createdAt < ?'; params.push(parseInt(cursor)); }
+    sql += ' ORDER BY createdAt DESC LIMIT ?';
+    params.push(lim);
+    const stmt = getDb().prepare(sql);
+    if (params.length) stmt.bind(params);
+    const rows: any[] = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      rows.push(normalizeRow(row));
+    }
+    stmt.free();
+    return reply.send(rows);
+  });
+
+  app.get('/api/jobs/:id', async (req, reply) => {
+    const { id } = req.params as any;
+    const stmt = getDb().prepare('SELECT * FROM listings WHERE id = ?');
+    stmt.bind([id]);
+    let row = null;
+    if (stmt.step()) {
+  row = normalizeRow(stmt.getAsObject());
+    }
+    stmt.free();
+    if (!row) return reply.code(404).send({ error: 'Not found' });
+    return reply.send(row);
+  });
+
+  app.post('/api/jobs', createListingHandler);
+
+  app.post('/api/jobs/:id/commit', async (req, reply) => {
+    const { id } = req.params as any;
+    const { commitHash } = (req.body || {}) as any;
+    if (!commitHash) return reply.code(400).send({ error: 'commitHash required' });
+    const row = getDb().prepare('SELECT id FROM listings WHERE id = ?').get(id);
+    if (!row) return reply.code(404).send({ error: 'Not found' });
+    getDb().prepare('UPDATE listings SET commitHash = ? WHERE id = ?').run(commitHash, id);
+    const { saveDatabase } = await import('./db.js');
+    saveDatabase();
+    return reply.send({ ok: true });
+  });
+
+  app.get('/api/jobs/onchain', handleOnchain);
+  app.get('/api/jobs/:id/onchain', async (req, reply) => {
+    req.query = { id: (req.params as any).id } as any;
+    return handleOnchain(req, reply);
   });
 
   // --- your existing health/listings CRUD routes unchanged below ---
@@ -196,8 +273,9 @@ async function main() {
     const rows: any[] = [];
     while (stmt.step()) {
       const row = stmt.getAsObject();
-      row.images = JSON.parse(row.images);
-      rows.push(row);
+      // normalize row types
+      const norm = normalizeRow(row);
+      rows.push(norm);
     }
     stmt.free();
     return rows;
@@ -209,16 +287,27 @@ async function main() {
     stmt.bind([id]);
     let row = null;
     if (stmt.step()) {
-      row = stmt.getAsObject();
-      row.images = JSON.parse(row.images);
+  row = normalizeRow(stmt.getAsObject());
     }
     stmt.free();
     if (!row) return reply.code(404).send({ error: 'Not found' });
     return row;
   });
 
-  app.post('/api/listings', async (req, reply) => {
+  // Extracted create handler so it can be reused by /api/listings and /api/jobs
+  async function createListingHandler(req: any, reply: any) {
     try {
+      // Normalize job shape (frontend sends company/location/salary) to the legacy listing shape
+      // so we can reuse the existing ListingCreateSchema and DB schema.
+      const incoming = Object.assign({}, req.body || {});
+      if (incoming.company && !incoming.seller) incoming.seller = incoming.company;
+      if (incoming.location && !incoming.region) incoming.region = incoming.location;
+      if ((incoming.salary !== undefined) && (incoming.price === undefined)) incoming.price = incoming.salary;
+      // images may contain empty strings from the form; filter them out
+      if (Array.isArray(incoming.images)) incoming.images = incoming.images.filter((x: any) => !!x && String(x).trim() !== '');
+      // move normalized body back onto req for downstream behaviour/logging
+      req.body = incoming;
+
       const parsed = ListingCreateSchema.safeParse(req.body);
       req.log.info({ body: req.body, parsed });
       if (!parsed.success) {
@@ -229,25 +318,23 @@ async function main() {
       const id = crypto.randomUUID();
       const createdAt = Date.now();
       // Debug log all values before insert
-      req.log.info({
-        id, title: input.title, description: input.description, price: input.price, category: input.category, region: input.region, seller: input.seller, images: input.images, createdAt
-      });
-      // Explicit undefined/null check
-      if ([id, input.title, input.description, input.price, input.category, input.region, input.seller, input.images, createdAt].some(v => v === undefined || v === null)) {
-        req.log.error('One or more fields are undefined or null');
-        return reply.code(400).send({ error: 'One or more fields are undefined or null', details: { id, title: input.title, description: input.description, price: input.price, category: input.category, region: input.region, seller: input.seller, images: input.images, createdAt } });
+      req.log.info({ id, title: input.title, description: input.description, price: input.price, salaryMin: input.salaryMin, salaryMax: input.salaryMax, category: input.category, region: input.region, seller: input.seller, employmentType: input.employmentType, level: input.level, remote: input.remote, tags: input.tags, contact: input.contact, benefits: input.benefits, images: input.images, createdAt });
+      // Basic required fields check (title, description, seller)
+      if ([id, input.title, input.description, input.seller, createdAt].some(v => v === undefined || v === null)) {
+        req.log.error('One or more required fields are undefined or null');
+        return reply.code(400).send({ error: 'One or more required fields are undefined or null', details: { id, title: input.title, description: input.description, seller: input.seller, createdAt } });
       }
-      // Use positional parameters for SQL.js insert
-      const insertSql = `INSERT INTO listings (id, title, description, price, category, region, seller, images, createdAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-      const values = [id, input.title, input.description, input.price, input.category, input.region, input.seller, JSON.stringify(input.images), createdAt];
+      // Use positional parameters for SQL.js insert with new job fields
+      const insertSql = `INSERT INTO listings (id, title, description, price, salaryMin, salaryMax, category, region, seller, employmentType, level, remote, tags, contact, benefits, images, createdAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      const values = [id, input.title, input.description, input.price ?? null, input.salaryMin ?? null, input.salaryMax ?? null, input.category, input.region ?? null, input.seller, input.employmentType ?? null, input.level ?? null, input.remote ? 1 : 0, input.tags ?? null, input.contact ?? null, input.benefits ?? null, JSON.stringify(input.images), createdAt];
       req.log.info({ insertSql, values });
       getDb().prepare(insertSql).run(values);
-      let commitHash = null;
-      let blockHash = null;
+  let commitHash: string | null = null;
+  let blockHash: string | null = null;
       try {
         const { ApiPromise, WsProvider } = await import('@polkadot/api');
-        const provider = new WsProvider(POLKADOT_WS);
+        const provider = new WsProvider(process.env.POLKADOT_WS || 'wss://westend-rpc.polkadot.io');
         const api = await ApiPromise.create({ provider });
         const { Keyring } = await import('@polkadot/keyring');
         const keyring = new Keyring({ type: 'sr25519' });
@@ -255,16 +342,43 @@ async function main() {
         const remark = JSON.stringify({ id, ...input, createdAt });
         const tx = api.tx.system.remark(remark);
         await new Promise((resolve, reject) => {
-          tx.signAndSend(dev, ({ status, txHash, dispatchError }) => {
+          let resolved = false;
+          const watcher = (result: any) => {
+            const { status, txHash, dispatchError } = result;
+            try {
+              req.log.info({ msg: 'tx.update', status: status?.toString?.(), txHash: txHash?.toHex?.() });
+            } catch {}
             if (dispatchError) {
-              reject(dispatchError.toString());
+              resolved = true;
+              return reject(dispatchError.toString());
             }
-            if (status.isInBlock) {
+            if (status?.isInBlock) {
               commitHash = txHash.toHex();
               blockHash = status.asInBlock.toHex();
-              resolve(true);
+              resolved = true;
+              return resolve(true);
             }
+            if (status?.isFinalized) {
+              // If somehow we only see finalized without inBlock, still capture hash
+              try { commitHash = txHash.toHex(); } catch {}
+              try { blockHash = status.asFinalized.toHex?.() ?? blockHash; } catch {}
+              if (!resolved) { resolved = true; return resolve(true); }
+            }
+          };
+
+          tx.signAndSend(dev, watcher).catch((e: any) => {
+            if (!resolved) return reject(e?.toString ? e.toString() : String(e));
           });
+
+          // safety timeout so the server doesn't hang forever if the node is slow
+          setTimeout(() => {
+            if (!resolved) {
+              req.log.warn('signAndSend timeout waiting for inclusion');
+              // let the flow continue; resolve so the listing still persists in DB
+              resolved = true;
+              return resolve(true);
+            }
+          }, 20000);
         });
         await api.disconnect();
       } catch (err) {
@@ -278,13 +392,13 @@ async function main() {
         let blockNumber = null;
         try {
           const { ApiPromise, WsProvider } = await import('@polkadot/api');
-          const provider = new WsProvider(POLKADOT_WS);
+          const provider = new WsProvider(process.env.POLKADOT_WS || 'wss://westend-rpc.polkadot.io');
           const api = await ApiPromise.create({ provider });
           const header = await api.rpc.chain.getHeader(blockHash);
           blockNumber = header.number.toNumber();
           await api.disconnect();
         } catch (err) {
-          req.log.error('Failed to fetch block number for blockHash', blockHash, err);
+          req.log.error(`Failed to fetch block number for blockHash ${blockHash}: ${err}`);
         }
         getDb().prepare('UPDATE listings SET commitHash = ?, blockHash = ?, blockNumber = ? WHERE id = ?').run(commitHash, blockHash, blockNumber, id);
         const { saveDatabase } = await import('./db.js');
@@ -304,7 +418,9 @@ async function main() {
       req.log.error(err);
       reply.code(500).send({ error: 'Internal server error', details: err.message || String(err) });
     }
-  });
+  }
+
+  app.post('/api/listings', createListingHandler);
 
   app.post('/api/listings/:id/commit', async (req, reply) => {
     const { id } = req.params as any;

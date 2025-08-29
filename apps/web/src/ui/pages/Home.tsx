@@ -1,73 +1,107 @@
 import { useEffect, useState } from 'react';
-import { fetchListings, fetchOnchainListingById, type Listing } from '../../lib/api';
-import ListingCard from '../components/ListingCard';
+import { fetchJobs, type Job } from '../../lib/api';
+import JobCard from '../components/JobCard';
+import { Input, Button, Card } from '../components/DesignSystem';
 
 export default function Home() {
-  const [items, setItems] = useState<Listing[]>([]);
-  const [onchainItems, setOnchainItems] = useState<Listing[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [q, setQ] = useState('');
-  const [tab, setTab] = useState<'local'|'onchain'>('local');
-  useEffect(() => {
-    if (tab === 'onchain') {
-      fetchListings().then(localListings => {
-        const published = localListings.filter(l => l.blockHash && l.commitHash);
-        Promise.all(published.map(l =>
-          fetchOnchainListingById(l.id).then(r => r.listing).catch(() => null)
-        )).then(results => {
-          setOnchainItems(results.filter(Boolean));
-        });
-      });
-    } else {
-      fetchListings({ q }).then(setItems);
-    }
-  }, [q, tab]);
+  const [tab, setTab] = useState<'all'|'saved'|'onchain'>('all');
+  const [loading, setLoading] = useState(false);
+  const [savedIds, setSavedIds] = useState<string[]>([]);
 
-  let tabContent;
-  if (tab === 'local') {
-    tabContent = (
-      <div>
-        <div className="mb-2 text-sm text-gray-600">These are your saved ads. Publish to chain to make them live.</div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.map(l => <ListingCard key={l.id} l={l} showPublish />)}
-          {!items.length && <div className="text-gray-500">No saved ads yet.</div>}
-        </div>
-      </div>
-    );
-  } else {
-    tabContent = (
-      <div>
-        <div className="mb-2 text-sm text-green-700">These are live ads published on-chain (Westend).</div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {onchainItems.map(l => <ListingCard key={l.id} l={l} />)}
-          {!onchainItems.length && <div className="text-gray-500">No live ads found on-chain.</div>}
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem('savedJobs') || '[]');
+      setSavedIds(s);
+    } catch { setSavedIds([]); }
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchJobs({ q }).then(list => {
+      setJobs(list || []);
+    }).catch(() => setJobs([])).finally(() => setLoading(false));
+  }, [q]);
+
+  const savedJobs = jobs.filter(j => savedIds.includes(j.id));
 
   return (
     <div className="space-y-8">
-      <header className="flex items-center justify-between py-6 px-4 bg-white shadow rounded-xl mb-6">
-        <div className="flex items-center gap-2">
-          <span className="text-yellow-600 text-2xl font-bold">🛒</span>
-          <span className="text-2xl font-bold text-gray-800">Polka Kleinanzeigen</span>
+      <header className="py-6 px-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-bold mb-1">Discover Web3 Careers</h1>
+            <p className="text-slate-300">Dropout — privacy-first, curated job listings for builders and creators.</p>
+          </div>
+          <div className="flex gap-2 items-center">
+            <Input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search jobs, people, companies..." className="w-96 rounded-full" />
+            <Button variant="ghost">Search</Button>
+          </div>
         </div>
-        <nav className="flex gap-4">
-          <a href="/" className="text-gray-700 hover:text-blue-700 font-semibold">Home</a>
-          <a href="/wallet" className="text-gray-700 hover:text-blue-700 font-semibold">Wallet</a>
-          <a href="/new" className="text-gray-700 hover:text-blue-700 font-semibold">New Listing</a>
-        </nav>
       </header>
-      <div className="flex gap-4 mb-4">
-        <button className={`btn ${tab==='local'?'bg-blue-600 text-white':'bg-gray-200 text-gray-700'}`} onClick={()=>setTab('local')}>Saved Ads</button>
-        <button className={`btn ${tab==='onchain'?'bg-blue-600 text-white':'bg-gray-200 text-gray-700'}`} onClick={()=>setTab('onchain')}>Live Ads (On-chain)</button>
-      </div>
-      <div className="card bg-white shadow rounded-xl p-4 mb-4">
-        <div className="flex gap-2 items-center">
-          <input className="input w-full" placeholder="Search listings…" value={q} onChange={e => setQ(e.target.value)} />
+
+      <div className="container max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <aside className="lg:col-span-1 space-y-4">
+            <Card>
+              <div className="font-semibold">Refine results</div>
+              <div className="mt-3 text-sm text-slate-400">Location</div>
+              <Input placeholder="Remote, Berlin, US" />
+              <div className="mt-3 text-sm text-slate-400">Experience level</div>
+              <div className="flex gap-2 mt-2">
+                <Button variant="ghost" size="sm">Entry</Button>
+                <Button variant="ghost" size="sm">Mid</Button>
+                <Button variant="ghost" size="sm">Senior</Button>
+              </div>
+              <div className="mt-4 text-sm text-slate-400">Employment type</div>
+              <div className="flex gap-2 mt-2">
+                <Button variant="ghost" size="sm">Full-time</Button>
+                <Button variant="ghost" size="sm">Contract</Button>
+              </div>
+            </Card>
+
+            <Card>
+              <div className="font-semibold">Saved</div>
+              <div className="mt-2 text-sm text-slate-400">{savedJobs.length} saved jobs</div>
+            </Card>
+          </aside>
+
+          <main className="lg:col-span-2 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex gap-3">
+                <Button variant={tab==='all' ? 'primary' : 'ghost'} onClick={()=>setTab('all')}>All</Button>
+                <Button variant={tab==='saved' ? 'primary' : 'ghost'} onClick={()=>setTab('saved')}>Saved</Button>
+                <Button variant={tab==='onchain' ? 'primary' : 'ghost'} onClick={()=>setTab('onchain')}>On-chain</Button>
+              </div>
+              <Button variant="secondary" onClick={() => window.location.href = '/new'}>Post a Job</Button>
+            </div>
+
+            {loading && <div className="text-center text-slate-400">Loading jobs…</div>}
+
+            {tab === 'saved' ? (
+              savedJobs.length ? <div className="space-y-4">{savedJobs.map(j => <JobCard key={j.id} job={j} useModal />)}</div> : <div className="text-center text-slate-500">No saved jobs yet.</div>
+            ) : (
+              jobs.length ? <div className="space-y-4">{jobs.map(j => <JobCard key={j.id} job={j} showPublish useModal />)}</div> : <div className="text-center text-slate-500">No jobs found.</div>
+            )}
+          </main>
+
+          <aside className="lg:col-span-1 space-y-4">
+            <Card>
+              <div className="font-semibold">Suggested companies</div>
+              <div className="mt-3 text-sm text-slate-400">Parity · Moonbeam · Open Source DAO</div>
+            </Card>
+            <Card>
+              <div className="font-semibold">Hiring insights</div>
+              <div className="mt-2 text-sm text-slate-400">Privacy-first hiring trends for Web3 roles.</div>
+            </Card>
+          </aside>
         </div>
       </div>
-      {tabContent}
+
+      <footer className="container text-center text-slate-400 py-8">
+        <p>Dropout Jobs — built for privacy and the open web.</p>
+      </footer>
     </div>
   );
 }

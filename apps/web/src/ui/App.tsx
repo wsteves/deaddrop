@@ -1,34 +1,43 @@
-
 import { Link, Route, Routes } from 'react-router-dom';
 import Home from './pages/Home';
-import NewListing from './pages/NewListing';
-import ListingDetail from './pages/ListingDetail';
+import NewJob from './pages/NewJob';
+import JobPreview from './pages/JobPreview';
 import Wallet from './pages/Wallet';
+import Header from './components/Header';
+import { Toaster } from 'react-hot-toast';
+import JobDetail from './pages/JobDetail';
+import { JobModalProvider } from './JobModalContext';
+import JobDetailModal from './components/JobDetailModal';
+import { Navigate, useParams } from 'react-router-dom';
+
+function RedirectLToJob() {
+  const { id } = useParams();
+  if (!id) return null;
+  return <Navigate to={`/job/${id}`} replace />;
+}
 
 export default function App() {
   return (
-    <div>
-      <header className="bg-white border-b">
-        <div className="container flex items-center justify-between h-16">
-          <Link to="/" className="font-bold text-lg">Polka Kleinanzeigen</Link>
-          <nav className="flex gap-4">
-            <Link to="/" className="hover:underline">Browse</Link>
-            <Link to="/new" className="hover:underline">Sell</Link>
-            <Link to="/wallet" className="hover:underline">Wallet</Link>
-          </nav>
-        </div>
-      </header>
-      <main className="container py-6">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/new" element={<NewListing />} />
-          <Route path="/l/:id" element={<ListingDetail />} />
-          <Route path="/wallet" element={<Wallet />} />
-        </Routes>
-      </main>
-      <footer className="container py-10 text-sm text-gray-500">
-        Demo only. On-chain commitments use system.remark.
-      </footer>
-    </div>
+    <JobModalProvider>
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-gray-900 text-slate-100">
+        <Header />
+        <main className="container mx-auto py-6 px-4">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/new" element={<NewJob />} />
+            <Route path="/preview" element={<JobPreview />} />
+            <Route path="/job/:id" element={<JobDetail />} />
+            {/* Backwards-compatible redirect for legacy links (preserve id) */}
+            <Route path="/l/:id" element={<RedirectLToJob />} />
+            <Route path="/wallet" element={<Wallet />} />
+          </Routes>
+        </main>
+        <footer className="container mx-auto py-10 text-center text-slate-400">
+          Demo only. On-chain commitments use system.remark.
+        </footer>
+        <JobDetailModal />
+  <Toaster position="bottom-right" />
+      </div>
+    </JobModalProvider>
   );
 }

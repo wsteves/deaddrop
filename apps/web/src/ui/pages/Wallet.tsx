@@ -1,70 +1,68 @@
-
-import { useEffect, useState } from 'react';
-import { web3Enable, web3Accounts, isWeb3Injected } from '@polkadot/extension-dapp';
-import { ApiPromise, WsProvider } from '@polkadot/api';
+import React, { useEffect, useState } from 'react';
+import { ensureExtension, initApi, connectExtension } from '../../lib/polkadot';
+import { Button, Card } from '../components/DesignSystem';
 
 export default function Wallet() {
-  const [endpoint, setEndpoint] = useState(import.meta.env.VITE_WS_ENDPOINT || 'wss://westend-rpc.polkadot.io');
-  const [chain, setChain] = useState('');
-  const [version, setVersion] = useState('');
   const [accounts, setAccounts] = useState<any[]>([]);
-  const [selected, setSelected] = useState<string>('');
-  const [extStatus, setExtStatus] = useState('');
+  const [selected, setSelected] = useState('');
+  const [balance, setBalance] = useState<string>('0');
 
   useEffect(() => {
-    (async () => {
-      const api = await ApiPromise.create({ provider: new WsProvider(endpoint) });
-      const [systemChain, nodeVersion] = await Promise.all([api.rpc.system.chain(), api.rpc.system.version()]);
-      setChain(systemChain.toString());
-      setVersion(nodeVersion.toString());
-      await api.disconnect();
-    })().catch(e => console.error(e));
-  }, [endpoint]);
-
-  useEffect(() => {
-    (async () => {
-      if (!isWeb3Injected) {
-        setExtStatus('No Polkadot wallet extension found. Install Talisman or Polkadot.js.');
-        setAccounts([]);
-        return;
-      }
-      setExtStatus('Wallet extension detected.');
-      await web3Enable('Polka Kleinanzeigen');
-      const accs = await web3Accounts();
-      setAccounts(accs);
-      if (accs.length) setSelected(accs[0].address);
-    })();
+    try {
+      const addr = localStorage.getItem('walletAddress') || '';
+      setSelected(addr);
+    } catch {}
   }, []);
 
+  useEffect(() => {
+    function onConnect(e: any) {
+      const detail = e?.detail;
+      if (detail?.accounts) {
+        setAccounts(detail.accounts);
+        if (detail.address) setSelected(detail.address);
+      }
+    }
+    window.addEventListener('wallet:connected', onConnect as any);
+    return () => window.removeEventListener('wallet:connected', onConnect as any);
+  }, []);
+
+  async function connect() {
+    try {
+      const accs = await connectExtension('Dropout Jobs');
+      setAccounts(accs);
+      if (accs.length) {
+        setSelected(accs[0].address);
+        localStorage.setItem('walletAddress', accs[0].address);
+        const api = await initApi();
+        const bal: any = await api.query.system.account(accs[0].address);
+        const free = bal?.data?.free ?? bal?.free ?? '0';
+        setBalance(String(free));
+      }
+    } catch (err:any) { alert('No extension or permission'); }
+  }
+
   return (
-    <div className="card space-y-6 max-w-xl bg-white shadow-lg rounded-xl p-6">
-      <h2 className="font-bold text-2xl mb-2 flex items-center gap-2">
-        <span className="text-yellow-600">🛒</span> Wallet & Chain Connection
-      </h2>
-      <div className="flex flex-col gap-2">
-        <label className="label">WS Endpoint</label>
-        <input className="input" value={endpoint} onChange={e=>setEndpoint(e.target.value)} />
-        <div className="text-sm text-gray-600">Chain: {chain || '…'} · Node version: {version || '…'}</div>
-      </div>
-      <div className="mt-4">
-        <div className="font-semibold mb-1">Wallet Extension Status:</div>
-        <div className="text-sm text-gray-700 mb-2">{extStatus}</div>
-        {accounts.length > 0 && (
-          <div className="flex flex-col gap-2">
-            <label className="label">Select Account</label>
-            <select className="input" value={selected} onChange={e=>setSelected(e.target.value)}>
-              {accounts.map(acc => (
-                <option key={acc.address} value={acc.address}>{acc.meta.name || 'Account'} - {acc.address}</option>
+    <div className="min-h-screen bg-slate-900 text-white">
+      <div className="container mx-auto py-8">
+        <h1 className="text-3xl font-bold mb-4">Wallet</h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="p-6">
+            <p className="mb-4 text-slate-300">Connect your Polkadot extension to manage publishing and signing.</p>
+            <Button onClick={connect}>Connect Wallet</Button>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="mb-2">Selected Account</h3>
+            <div className="mb-2">{selected || 'None'}</div>
+            <div className="mb-2">Balance: {balance}</div>
+            <div className="flex gap-2 mt-4">
+              {accounts.map(a => (
+                <Button key={a.address} variant={selected===a.address ? 'primary' : 'ghost'} onClick={() => { setSelected(a.address); localStorage.setItem('walletAddress', a.address); }}>{a.meta.name}</Button>
               ))}
-            </select>
-            <div className="text-xs text-gray-500">Connected: {selected}</div>
-          </div>
-        )}
-        {accounts.length === 0 && (
-          <div className="text-xs text-red-500">No accounts found. Open your wallet extension and authorize this app.</div>
-        )}
+            </div>
+          </Card>
+        </div>
       </div>
-      <p className="text-sm text-gray-600 mt-4">Use Talisman or Polkadot.js browser extension to sign transactions and interact with the chain.</p>
     </div>
   );
 }
