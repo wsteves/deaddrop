@@ -1,20 +1,49 @@
-
 import { useEffect, useState } from 'react';
-import { fetchListings, fetchOnchainListings, type Listing } from '../../lib/api';
+import { fetchListings, fetchOnchainListingById, type Listing } from '../../lib/api';
 import ListingCard from '../components/ListingCard';
 
 export default function Home() {
   const [items, setItems] = useState<Listing[]>([]);
   const [onchainItems, setOnchainItems] = useState<Listing[]>([]);
   const [q, setQ] = useState('');
-  const [showOnchain, setShowOnchain] = useState(false);
+  const [tab, setTab] = useState<'local'|'onchain'>('local');
   useEffect(() => {
-    if (showOnchain) {
-      fetchOnchainListings().then(setOnchainItems);
+    if (tab === 'onchain') {
+      fetchListings().then(localListings => {
+        const published = localListings.filter(l => l.blockHash && l.commitHash);
+        Promise.all(published.map(l =>
+          fetchOnchainListingById(l.id).then(r => r.listing).catch(() => null)
+        )).then(results => {
+          setOnchainItems(results.filter(Boolean));
+        });
+      });
     } else {
       fetchListings({ q }).then(setItems);
     }
-  }, [q, showOnchain]);
+  }, [q, tab]);
+
+  let tabContent;
+  if (tab === 'local') {
+    tabContent = (
+      <div>
+        <div className="mb-2 text-sm text-gray-600">These are your saved ads. Publish to chain to make them live.</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {items.map(l => <ListingCard key={l.id} l={l} showPublish />)}
+          {!items.length && <div className="text-gray-500">No saved ads yet.</div>}
+        </div>
+      </div>
+    );
+  } else {
+    tabContent = (
+      <div>
+        <div className="mb-2 text-sm text-green-700">These are live ads published on-chain (Westend).</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {onchainItems.map(l => <ListingCard key={l.id} l={l} />)}
+          {!onchainItems.length && <div className="text-gray-500">No live ads found on-chain.</div>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -29,18 +58,16 @@ export default function Home() {
           <a href="/new" className="text-gray-700 hover:text-blue-700 font-semibold">New Listing</a>
         </nav>
       </header>
+      <div className="flex gap-4 mb-4">
+        <button className={`btn ${tab==='local'?'bg-blue-600 text-white':'bg-gray-200 text-gray-700'}`} onClick={()=>setTab('local')}>Saved Ads</button>
+        <button className={`btn ${tab==='onchain'?'bg-blue-600 text-white':'bg-gray-200 text-gray-700'}`} onClick={()=>setTab('onchain')}>Live Ads (On-chain)</button>
+      </div>
       <div className="card bg-white shadow rounded-xl p-4 mb-4">
         <div className="flex gap-2 items-center">
           <input className="input w-full" placeholder="Search listings…" value={q} onChange={e => setQ(e.target.value)} />
-          <button className={`btn ml-2 ${showOnchain ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`} onClick={() => setShowOnchain(v => !v)}>
-            {showOnchain ? 'Show Local' : 'Show On-chain'}
-          </button>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {(showOnchain ? onchainItems : items).map(l => <ListingCard key={l.id} l={l} />)}
-        {!(showOnchain ? onchainItems.length : items.length) && <div className="text-gray-500">No listings yet.</div>}
-      </div>
+      {tabContent}
     </div>
   );
 }

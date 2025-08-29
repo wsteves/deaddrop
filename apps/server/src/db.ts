@@ -1,4 +1,3 @@
-
 import initSqlJs from 'sql.js';
 import fs from 'fs';
 import path from 'path';
@@ -27,10 +26,13 @@ async function loadDatabase() {
       region TEXT,
       seller TEXT NOT NULL,
       images TEXT NOT NULL,
-      createdAt INTEGER NOT NULL,
-      commitHash TEXT
+      createdAt INTEGER NOT NULL
     );
   `);
+  // Safe migrations for missing columns
+  try { db.run('ALTER TABLE listings ADD COLUMN blockHash TEXT'); } catch {}
+  try { db.run('ALTER TABLE listings ADD COLUMN blockNumber INTEGER'); } catch {}
+  try { db.run('ALTER TABLE listings ADD COLUMN commitHash TEXT'); } catch {}
 }
 
 

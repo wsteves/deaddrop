@@ -22,6 +22,7 @@ export type Listing = {
   images: string[];
   createdAt: number;
   commitHash?: string | null;
+  blockHash?: string | null;
 }
 
 export async function fetchListings(params?: { q?: string; region?: string; category?: string; cursor?: string; limit?: number }) {
@@ -46,5 +47,10 @@ export async function createListing(data: Omit<Listing, 'id' | 'createdAt'>): Pr
 
 export async function saveCommit(id: string, commitHash: string) {
   const res = await api.post('/api/listings/' + id + '/commit', { commitHash });
+  return res.data;
+}
+
+export async function fetchOnchainListingById(id: string) {
+  const res = await api.get('/api/listings/onchain', { params: { id } });
   return res.data;
 }
