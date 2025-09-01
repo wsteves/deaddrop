@@ -675,7 +675,7 @@ export default function Home() {
                   <div className="text-xs text-[var(--text-secondary)]">Active Jobs</div>
                 </div>
                 <div className="text-center p-4 bg-white/50 rounded-lg">
-                  <div className="text-2xl font-bold text-[var(--accent-dropout)] mb-1">{jobs.filter(j => j.commitHash).length}</div>
+                  <div className="text-2xl font-bold text-[var(--accent-dropout)] mb-1">{jobs.filter(j => (j as any).commitHash || (j as any).storageId).length}</div>
                   <div className="text-xs text-[var(--text-secondary)]">Verified</div>
                 </div>
                 <div className="text-center p-4 bg-white/50 rounded-lg">

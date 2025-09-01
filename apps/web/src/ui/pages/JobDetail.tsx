@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Job } from '../../lib/api';
-import { fetchJob, saveJobCommit } from '../../lib/api';
-import { ensureExtension, initApi, computeCommit, signRemark } from '../../lib/polkadot';
+import { fetchJobWithStorage } from '../../lib/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Button, Card } from '../components/DesignSystem';
@@ -12,16 +11,8 @@ export default function JobDetail() {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [publishing, setPublishing] = useState(false);
   const [saved, setSaved] = useState(false);
   const nav = useNavigate();
-  
-  // Get wallet address from localStorage (set by Wallet.tsx)
-  const [address, setAddress] = useState<string>('');
-  useEffect(() => {
-    const addr = localStorage.getItem('walletAddress') || '';
-    setAddress(addr);
-  }, []);
 
   // Check if job is saved
   useEffect(() => {
@@ -39,9 +30,9 @@ export default function JobDetail() {
     if (id) {
       setLoading(true);
       setError(null);
-      fetchJob(id)
+      fetchJobWithStorage(id)
         .then(setJob)
-        .catch((err) => {
+        .catch((err: any) => {
           console.error('Failed to fetch job:', err);
           setError('Failed to load job details. This job might not exist or there was a network error.');
         })
@@ -68,44 +59,6 @@ export default function JobDetail() {
       toast.error('Failed to save job');
     }
   };
-
-  async function handlePublish() {
-    if (!job) return;
-    if (!address) {
-      toast.error('No wallet address selected. Connect your wallet first.');
-      return;
-    }
-    setPublishing(true);
-    try {
-      await ensureExtension('Polka Jobs');
-      const api = await initApi();
-      const commit = await computeCommit(job as any);
-      const { web3Accounts, web3FromAddress } = await import('@polkadot/extension-dapp');
-      const accounts = await web3Accounts();
-      if (!accounts || accounts.length === 0) throw new Error('No accounts available in extension');
-      const from = accounts[0].address;
-      const injector = await web3FromAddress(from);
-      // build remark tx and sign/send using injector
-      const { buildRemark } = await import('@polka-kleinanzeigen/chain');
-      const tx = buildRemark(api, commit.hex);
-      const result = await new Promise<string>((resolve, reject) => {
-        tx.signAndSend(from, { signer: injector.signer }, (r: any) => {
-          if (r.dispatchError) return reject(r.dispatchError.toString());
-          if (r.status?.isInBlock) return resolve(r.status.asInBlock.toString());
-        }).catch(reject);
-      });
-      // save commit metadata
-      await saveJobCommit(job.id, commit.hex, result, null as any, from);
-      const updated = await fetchJob(job.id);
-      setJob(updated);
-      toast.success('Job published to chain!');
-      nav('/');
-    } catch (err: any) {
-      toast.error('Failed to publish job: ' + (err?.message || String(err)));
-    } finally {
-      setPublishing(false);
-    }
-  }
 
   if (loading) {
     return (
@@ -232,15 +185,15 @@ export default function JobDetail() {
                 <div className="w-20 h-20 bg-gradient-to-br from-[var(--accent-primary)] to-[var(--accent-dropout)] rounded-xl flex items-center justify-center text-white text-2xl font-bold shadow-lg">
                   {displayCompany.charAt(0).toUpperCase()}
                 </div>
-                {job.commitHash && (
+                {job.storageId && (
                   <motion.div 
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center"
+                    className="absolute -top-2 -right-2 w-6 h-6 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center"
                   >
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
                     </svg>
                   </motion.div>
                 )}
@@ -307,12 +260,12 @@ export default function JobDetail() {
                       {job.experienceLevel} Level
                     </span>
                   )}
-                  {job.commitHash && (
-                    <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                  {job.storageId && (
+                    <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                       <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
                       </svg>
-                      Verified
+                      Decentralized
                     </span>
                   )}
                 </motion.div>
@@ -352,29 +305,6 @@ export default function JobDetail() {
                     </svg>
                     {saved ? 'Saved' : 'Save Job'}
                   </Button>
-
-                  {!job.commitHash && address && (
-                    <Button 
-                      variant="ghost" 
-                      onClick={handlePublish}
-                      disabled={publishing}
-                      className="flex items-center gap-2"
-                    >
-                      {publishing ? (
-                        <>
-                          <div className="animate-spin h-4 w-4 border-2 border-[var(--accent-primary)] border-t-transparent rounded-full" />
-                          Publishing...
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                          </svg>
-                          Publish on Chain
-                        </>
-                      )}
-                    </Button>
-                  )}
                 </motion.div>
               </div>
             </div>
@@ -444,17 +374,15 @@ export default function JobDetail() {
                         })}
                       </div>
                     </div>
-                    {job.commitHash && (
+                    {job.storageId && (
                       <div>
-                        <div className="text-sm font-semibold text-[var(--text-primary)] mb-1">Blockchain</div>
-                        <a 
-                          href={`https://westend.subscan.io/extrinsic/${job.commitHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-[var(--accent-primary)] hover:underline"
-                        >
-                          View on Explorer →
-                        </a>
+                        <div className="text-sm font-semibold text-[var(--text-primary)] mb-1">Storage</div>
+                        <div className="text-xs text-[var(--text-secondary)] space-y-1">
+                          <div>Stored on IPFS</div>
+                          <div className="font-mono text-xs bg-gray-100 p-1 rounded break-all">
+                            {job.storageId.substring(0, 20)}...
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>

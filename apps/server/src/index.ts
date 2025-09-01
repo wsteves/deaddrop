@@ -171,6 +171,182 @@ async function main() {
   });
 
   // =============================================================================
+  // DECENTRALIZED STORAGE ENDPOINTS
+  // =============================================================================
+
+  // Simple in-memory storage for development (replace with IPFS in production)
+  const storageMap = new Map<string, any>();
+  const jobStorageMap = new Map<string, string>(); // Maps job ID to storage ID
+
+  // Store data (simulating IPFS)
+  app.post('/api/storage/store', async (req, reply) => {
+    try {
+      const { data } = req.body as any;
+      if (!data) {
+        return reply.code(400).send({ error: 'No data provided' });
+      }
+
+      // Generate a content-addressed ID (in real IPFS this would be based on content hash)
+      const id = 'ipfs_' + crypto.randomBytes(16).toString('hex');
+      
+      // Store the data
+      storageMap.set(id, {
+        data,
+        storedAt: Date.now(),
+        version: '1.0'
+      });
+
+      req.log.info(`Stored data with ID: ${id}`);
+      return reply.send({ id, message: 'Data stored successfully' });
+    } catch (error) {
+      req.log.error('Error storing data:', error);
+      return reply.code(500).send({ error: 'Failed to store data' });
+    }
+  });
+
+  // Retrieve data
+  app.get('/api/storage/retrieve/:id', async (req, reply) => {
+    try {
+      const id = (req.params as any).id;
+      const stored = storageMap.get(id);
+      
+      if (!stored) {
+        return reply.code(404).send({ error: 'Content not found' });
+      }
+
+      return reply.send({ 
+        data: stored.data, 
+        storedAt: stored.storedAt,
+        version: stored.version 
+      });
+    } catch (error) {
+      req.log.error('Error retrieving data:', error);
+      return reply.code(500).send({ error: 'Failed to retrieve data' });
+    }
+  });
+
+  // Pin content (no-op for development, would pin on IPFS in production)
+  app.post('/api/storage/pin/:id', async (req, reply) => {
+    try {
+      const id = (req.params as any).id;
+      const stored = storageMap.get(id);
+      
+      if (!stored) {
+        return reply.code(404).send({ error: 'Content not found' });
+      }
+
+      // In production, this would pin the content on IPFS
+      req.log.info(`Pinned content: ${id}`);
+      return reply.send({ message: 'Content pinned successfully' });
+    } catch (error) {
+      req.log.error('Error pinning content:', error);
+      return reply.code(500).send({ error: 'Failed to pin content' });
+    }
+  });
+
+  // Create job with decentralized storage
+  app.post('/api/jobs/decentralized', async (req, reply) => {
+    try {
+      const body = req.body || {};
+      const jobId = crypto.randomUUID();
+      
+      // Store the job metadata along with the storage entry
+      const jobMetadata = {
+        id: jobId,
+        title: body.title,
+        description: body.description,
+        companyId: body.companyId,
+        location: body.location,
+        salary: body.salary,
+        salaryMin: body.salaryMin,
+        salaryMax: body.salaryMax,
+        tags: body.tags,
+        skills: body.skills,
+        employmentType: body.employmentType,
+        experienceLevel: body.experienceLevel,
+        remote: body.remote,
+        applicationEmail: body.applicationEmail,
+        applicationMethod: body.applicationMethod,
+        benefits: body.benefits,
+        createdAt: Date.now(),
+        postedBy: 'decentralized-user',
+        expiresAt: body.expiresAt
+      };
+
+      // Create a storage entry that includes the job metadata  
+      const storageId = 'ipfs_' + crypto.randomBytes(16).toString('hex');
+      storageMap.set(storageId, {
+        data: jobMetadata,
+        storedAt: Date.now(),
+        version: '1.0'
+      });
+
+      // Also store a job reference by job ID for easy lookup
+      jobStorageMap.set(jobId, storageId);
+
+      req.log.info(`Created decentralized job with ID: ${jobId} and storage ID: ${storageId}`);
+      
+      return reply.code(201).send({
+        ...jobMetadata,
+        storageId,
+        success: true
+      });
+    } catch (error) {
+      req.log.error('Error creating decentralized job:', error);
+      return reply.code(400).send({ 
+        error: 'Failed to create job',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Get all decentralized jobs
+  app.get('/api/jobs/decentralized', async (req, reply) => {
+    try {
+      // For now, return jobs from storage map (in future, this would query IPFS/distributed storage)
+      const jobs = Array.from(storageMap.values()).map((stored: any) => ({
+        id: Math.random().toString(36).substring(7), // temp ID
+        ...stored.data,
+        createdAt: stored.storedAt,
+        storageId: Array.from(storageMap.keys()).find(key => storageMap.get(key) === stored)
+      }));
+      
+      return reply.send(jobs);
+    } catch (error) {
+      req.log.error('Error fetching decentralized jobs:', error);
+      return reply.code(500).send({ error: 'Failed to fetch jobs' });
+    }
+  });
+
+  // Get individual decentralized job by ID
+  app.get('/api/jobs/decentralized/:id', async (req, reply) => {
+    try {
+      const jobId = (req.params as any).id;
+      
+      // Look up storage ID by job ID
+      const storageId = jobStorageMap.get(jobId);
+      if (!storageId) {
+        return reply.code(404).send({ error: 'Job not found' });
+      }
+
+      // Get job data from storage
+      const stored = storageMap.get(storageId);
+      if (!stored) {
+        return reply.code(404).send({ error: 'Job data not found' });
+      }
+
+      return reply.send({
+        ...stored.data,
+        storageId,
+        retrievedAt: Date.now()
+      });
+    } catch (error) {
+      req.log.error('Error fetching decentralized job:', error);
+      return reply.code(500).send({ error: 'Failed to fetch job' });
+    }
+  });
+
+  // =============================================================================
   // USER ENDPOINTS
   // =============================================================================
 

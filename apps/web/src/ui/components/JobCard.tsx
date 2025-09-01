@@ -6,8 +6,8 @@ import { Button } from './DesignSystem';
 import { useJobModal } from '../JobModalContext';
 
 export default function JobCard({ job, showPublish, onPublish, useModal }: { job: Job, showPublish?: boolean, onPublish?: () => void, useModal?: boolean }) {
-  const explorerTx = job.commitHash ? `https://westend.subscan.io/extrinsic/${job.commitHash}` : null;
-  const explorerBlock = job.blockNumber ? `https://westend.subscan.io/block/${job.blockNumber}` : null;
+  const explorerTx = (job as any).commitHash ? `https://westend.subscan.io/extrinsic/${(job as any).commitHash}` : null;
+  const explorerBlock = (job as any).blockNumber ? `https://westend.subscan.io/block/${(job as any).blockNumber}` : null;
   const [saved, setSaved] = useState(false);
   const detailsRef = useRef<HTMLButtonElement | null>(null);
   const navigate = useNavigate();
@@ -167,20 +167,33 @@ export default function JobCard({ job, showPublish, onPublish, useModal }: { job
             animate={{ opacity: 1 }}
             transition={{ delay: 0.25 }}
           >
-            {(job.tags || '').split(',').slice(0, 4).map((t: string, i: number) => 
-              t.trim() ? (
-                <motion.span 
-                  key={i} 
-                  className="inline-flex items-center px-2.5 py-1 bg-[var(--accent-dropout-light)] text-[var(--accent-dropout)] rounded-md text-xs font-medium"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 + i * 0.05, type: "spring", stiffness: 200 }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  {t.trim()}
-                </motion.span>
-              ) : null
-            )}
+            {(() => {
+              // Handle both string and array formats for tags
+              let tags: string[] = [];
+              if (Array.isArray(job.tags)) {
+                tags = job.tags;
+              } else if (typeof job.tags === 'string' && job.tags) {
+                tags = job.tags.split(',');
+              } else if (job.skills && Array.isArray(job.skills)) {
+                // Fallback to skills if tags is not available
+                tags = job.skills;
+              }
+              
+              return tags.slice(0, 4).map((t: string, i: number) => 
+                t.trim() ? (
+                  <motion.span 
+                    key={i} 
+                    className="inline-flex items-center px-2.5 py-1 bg-[var(--accent-dropout-light)] text-[var(--accent-dropout)] rounded-md text-xs font-medium"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 + i * 0.05, type: "spring", stiffness: 200 }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    {t.trim()}
+                  </motion.span>
+                ) : null
+              );
+            })()}
           </motion.div>
 
           <motion.div 
@@ -217,9 +230,9 @@ export default function JobCard({ job, showPublish, onPublish, useModal }: { job
             </div>
             
             <div className="flex items-center gap-2">
-              {job.commitHash ? (
+              {(job as any).commitHash || (job as any).storageId ? (
                 <motion.a
-                  href={explorerTx || '#'}
+                  href={(job as any).commitHash ? (explorerTx || '#') : '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
@@ -227,7 +240,7 @@ export default function JobCard({ job, showPublish, onPublish, useModal }: { job
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  ✓ Verified
+                  ✓ {(job as any).storageId ? 'Decentralized' : 'Verified'}
                 </motion.a>
               ) : showPublish ? (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>

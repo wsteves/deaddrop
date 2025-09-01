@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { fetchJob, fetchOnchainListingById, type Job } from '../../lib/api';
+import { fetchJob, fetchJobWithStorage, fetchOnchainListingById, type Job } from '../../lib/api';
 import { useJobModal } from '../JobModalContext';
 
 export default function JobDetailModal() {
@@ -20,7 +20,7 @@ export default function JobDetailModal() {
       setLoading(true);
       try {
         setIsLocalOnly(false);
-        const j = await fetchJob(openId).catch(() => null);
+        const j = await fetchJobWithStorage(openId).catch(() => null);
         if (j && j.title) {
           if (!mounted) return;
           setJob(j);
@@ -76,7 +76,7 @@ export default function JobDetailModal() {
             setJob(normalized as Job);
           }
         } else {
-          const local = await fetchJob(openId).catch(() => null);
+          const local = await fetchJobWithStorage(openId).catch(() => null);
           if (local && local.title) {
             if (!mounted) return;
             setJob(local);

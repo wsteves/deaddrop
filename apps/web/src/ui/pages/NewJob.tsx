@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { createJob, saveJobCommit } from '../../lib/api';
+import { createJobWithStorage } from '../../lib/api';
 import toast from 'react-hot-toast';
 import { Input, Button, Card, Textarea } from '../components/DesignSystem';
-import { computeCommit, initApi, signRemark, connectExtension } from '../../lib/polkadot';
 import { useNavigate } from 'react-router-dom';
 
 export default function NewJob() {
@@ -21,7 +20,6 @@ export default function NewJob() {
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
   const nav = useNavigate();
-  const [publishOnChain, setPublishOnChain] = useState(true);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [showDrafts, setShowDrafts] = useState(false);
   const [savedDrafts, setSavedDrafts] = useState<any[]>([]);
@@ -87,7 +85,9 @@ export default function NewJob() {
     e.preventDefault();
     setSaving(true);
     try {
-      const created = await createJob({
+      setStatusMessage('Creating job posting...');
+      
+      const created = await createJobWithStorage({
         title,
         description,
         companyId: company, // Map company to companyId
@@ -103,46 +103,22 @@ export default function NewJob() {
         benefits,
         tags: tags ? tags.split(',').map(t => t.trim()) : [], // Convert comma-separated to array
         skills: [], // Default empty array
+        expiresAt: Date.now() + (90 * 24 * 60 * 60 * 1000), // 90 days from now
       });
+      
       localStorage.removeItem('jobDraft');
-    // Optionally publish on-chain using the user's extension (client-side signing)
-    if (publishOnChain) {
-      setStatusMessage('Preparing on-chain publish…');
-      try {
-  const accs = await connectExtension('Polkadot Jobs');
-        if (!accs || accs.length === 0) throw new Error('No accounts available');
-        const from = accs[0].address;
-        setStatusMessage('Connecting to network…');
-        const api = await initApi();
-  setStatusMessage('Computing commit…');
-  const commit = await computeCommit({ id: created.id, title, salary: salary ? Number(salary) : undefined, salaryMin: salaryMin ? Number(salaryMin) : undefined, salaryMax: salaryMax ? Number(salaryMax) : undefined, location: location || '', employmentType, level, remote, contact });
-        setStatusMessage('Requesting signature from extension…');
-        const { web3FromAddress } = await import('@polkadot/extension-dapp');
-        const injector = await web3FromAddress(from);
-        const { buildRemark } = await import('@polka-kleinanzeigen/chain');
-        const tx = buildRemark(api, commit.hex);
-        const blockHash = await new Promise<string>((resolve, reject) => {
-          tx.signAndSend(from, { signer: injector.signer }, (r: any) => {
-            if (r.dispatchError) return reject(r.dispatchError.toString());
-            if (r.status?.isInBlock) return resolve(r.status.asInBlock.toString());
-          }).catch(reject);
-        });
-        setStatusMessage('Saving commit metadata…');
-        await saveJobCommit(created.id, commit.hex, blockHash, null as any, from).catch(() => null);
-  setStatusMessage('Published on-chain ✓');
-  toast.success('Published on-chain ✓');
-      } catch (err:any) {
-  console.warn('On-chain publish failed or skipped:', err);
-  setStatusMessage('On-chain publish skipped or failed');
-  toast.error('On-chain publish failed: ' + (err?.message || String(err)));
-      }
-    }
+      setStatusMessage('Job posted successfully!');
+      toast.success('🎉 Job posted to decentralized storage!');
 
-    // Navigate to job page
-    try { nav(`/job/${created.id}`); } catch {}
-    } catch (err) {
-      alert('Failed to post');
-    } finally { setSaving(false); }
+      // Navigate to job page
+      nav(`/job/${created.id}`);
+    } catch (err: any) {
+      console.error('Failed to post job:', err);
+      setStatusMessage('Failed to post job');
+      toast.error('Failed to post job: ' + (err?.message || String(err)));
+    } finally { 
+      setSaving(false); 
+    }
   }
 
   return (
@@ -387,26 +363,25 @@ export default function NewJob() {
           {/* Blockchain Options */}
           <div className="bg-gradient-to-r from-[var(--accent-dropout-light)] to-purple-50 rounded-lg border border-[var(--accent-dropout)] p-6">
             <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4 flex items-center">
-              <span className="w-8 h-8 bg-[var(--accent-dropout)] text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">🔗</span>
-              Blockchain Verification
+              <span className="w-8 h-8 bg-[var(--accent-dropout)] text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">🌐</span>
+              Decentralized Storage
             </h2>
             
-            <div className="flex items-start space-x-3">
-              <input 
-                id="publish" 
-                type="checkbox" 
-                checked={publishOnChain} 
-                onChange={e => setPublishOnChain(e.target.checked)} 
-                disabled={saving}
-                className="w-4 h-4 text-[var(--accent-dropout)] bg-white border-[var(--border)] rounded focus:ring-[var(--accent-dropout)] mt-1"
-              />
-              <div>
-                <label htmlFor="publish" className="text-sm font-medium text-[var(--text-primary)] cursor-pointer">
-                  Publish on-chain for verification
-                </label>
-                <p className="text-xs text-[var(--text-secondary)] mt-1">
-                  Cryptographically secure your job posting on the Polkadot network. This creates an immutable record and builds trust with candidates.
-                </p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-green-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-green-800">
+                    Your job will be stored on IPFS
+                  </h3>
+                  <p className="text-xs text-green-700 mt-1">
+                    Decentralized, censorship-resistant storage that ensures your job posting remains accessible. Content is automatically pinned for persistence.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
