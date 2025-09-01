@@ -232,15 +232,22 @@ export default function JobCard({ job, showPublish, onPublish, useModal }: { job
             <div className="flex items-center gap-2">
               {(job as any).commitHash || (job as any).storageId ? (
                 <motion.a
-                  href={(job as any).commitHash ? (explorerTx || '#') : '#'}
+                  href={(job as any).storageId ? 
+                    `https://ipfs.io/ipfs/${(job as any).storageId}` : 
+                    (explorerTx || '#')
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
                   className="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 rounded-md text-xs font-medium hover:bg-green-100 transition-colors"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  title={(job as any).storageId ? 
+                    `View on public IPFS: ${(job as any).storageId}` : 
+                    'View on blockchain explorer'
+                  }
                 >
-                  ✓ {(job as any).storageId ? 'Decentralized' : 'Verified'}
+                  🌐 {(job as any).storageId ? 'Public IPFS' : 'Verified'}
                 </motion.a>
               ) : showPublish ? (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>

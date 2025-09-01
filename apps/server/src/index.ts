@@ -5,7 +5,7 @@ import formBody from '@fastify/formbody';
 import { getDb, loadDatabase, getAllJobs, getJobById, createJob, searchJobs, getUserById, createUser, updateUser, deleteUser, getCompanyById, createCompany, updateCompany, deleteCompany, getUserSkills, addUserSkill, updateUserSkill, deleteUserSkill, getUserWorkExperience, addWorkExperience, updateWorkExperience, deleteWorkExperience, getUserEducation, addEducation, updateEducation, deleteEducation, getJobApplications, createApplication, updateApplication, getApplicationById, getUserApplications, saveJob, unsaveJob, getUserSavedJobs } from './db.js';
 import { JobCreateSchema, JobUpdateSchema, UserCreateSchema, UserUpdateSchema, CompanyCreateSchema, CompanyUpdateSchema, UserSkillCreateSchema, WorkExperienceCreateSchema, EducationCreateSchema, ApplicationCreateSchema, ListingCreateSchema } from './schemas.js';
 import crypto from 'crypto';
-import { crustStorage } from './crust-storage.js';
+import { crustNetwork, initializeCrustNetwork } from './crustNetworkService.js';
 
 // Shared API instance (reused across requests)
 let sharedApi: any | null = null;
@@ -187,15 +187,17 @@ async function main() {
         return reply.code(400).send({ error: 'No data provided' });
       }
 
-      // Store on Crust IPFS
-      const ipfsHash = await crustStorage.store(data);
+      // Store on Crust Network with real storage order
+      const result = await crustNetwork.storeData(data);
+      const ipfsHash = result.cid;
       
       // Also keep in local storage map for faster retrieval (cache)
       storageMap.set(ipfsHash, {
         data,
         storedAt: Date.now(),
         version: '1.0',
-        ipfsHash
+        ipfsHash,
+        storageOrder: result.storageOrder
       });
 
       req.log.info(`🌐 Stored on Crust IPFS: ${ipfsHash}`);
@@ -233,8 +235,8 @@ async function main() {
         });
       }
 
-      // Retrieve from Crust IPFS
-      const data = await crustStorage.retrieve(id);
+      // Retrieve from Crust Network
+      const data = await crustNetwork.retrieveData(id);
       
       // Cache the result
       const result = {
@@ -305,13 +307,19 @@ async function main() {
         expiresAt: body.expiresAt
       };
 
-      // Create a storage entry that includes the job metadata  
-      const storageId = 'ipfs_' + crypto.randomBytes(16).toString('hex');
-      storageMap.set(storageId, {
-        data: jobMetadata,
-        storedAt: Date.now(),
-        version: '1.0'
+      // Store the job data on real Crust Network IPFS
+      const storeResponse = await fetch('http://localhost:4000/api/storage/store', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: jobMetadata })
       });
+      
+      if (!storeResponse.ok) {
+        throw new Error('Failed to store job on IPFS');
+      }
+      
+      const storeResult = await storeResponse.json();
+      const storageId = storeResult.id;
 
       // Also store a job reference by job ID for easy lookup
       jobStorageMap.set(jobId, storageId);
@@ -668,11 +676,97 @@ async function main() {
     }
   });
 
+  // Get detailed account info
+  app.get('/api/crust/account/:address?', async (req, reply) => {
+    try {
+      const address = req.params.address || crustNetwork.getAccountAddress();
+      
+      // Make sure Crust Network is initialized
+      if (!crustNetwork || address === 'Not initialized') {
+        await initializeCrustNetwork();
+      }
+      
+      const actualAddress = crustNetwork.getAccountAddress();
+      const balance = await crustNetwork.getAccountBalance();
+      
+      // Convert balance from smallest unit to CRU (if needed)
+      const balanceInCRU = balance === '0' ? '0' : (parseInt(balance) / 1000000000000).toString();
+      
+      const accountInfo = {
+        address: actualAddress,
+        balance: balance,
+        balanceInCRU: balanceInCRU,
+        network: 'Rocky Network (Testnet)',
+        explorerUrl: `https://rocky.subscan.io/account/${actualAddress}`,
+        funded: balance !== '0'
+      };
+      
+      return reply.send(accountInfo);
+    } catch (error) {
+      return reply.code(500).send({ 
+        error: 'Failed to get account info',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Crust Network status endpoint
+  app.get('/api/crust/status', async (req, reply) => {
+    try {
+      const status = {
+        connected: crustNetwork ? true : false,
+        accountAddress: crustNetwork.getAccountAddress(),
+        balance: await crustNetwork.getAccountBalance(),
+        gatewayUrl: crustNetwork.getIPFSGatewayUrl(''),
+        network: 'Crust Rocky Network (Testnet)'
+      };
+      return reply.send(status);
+    } catch (error) {
+      return reply.code(500).send({ 
+        error: 'Failed to get Crust Network status',
+        connected: false
+      });
+    }
+  });
+
+  // Get storage order status for a CID
+  app.get('/api/crust/order/:cid', async (req, reply) => {
+    try {
+      const { cid } = req.params as { cid: string };
+      const orderStatus = await crustNetwork.getStorageOrderStatus(cid);
+      
+      if (!orderStatus) {
+        return reply.code(404).send({ error: 'Storage order not found' });
+      }
+
+      return reply.send({
+        ...orderStatus,
+        gatewayUrl: crustNetwork.getIPFSGatewayUrl(cid),
+        explorerUrl: crustNetwork.getCrustExplorerUrl(cid)
+      });
+    } catch (error) {
+      return reply.code(500).send({ 
+        error: 'Failed to get storage order status'
+      });
+    }
+  });
+
   // Start server
   const port = parseInt(process.env.PORT || '4000', 10);
-  app.listen({ port, host: '0.0.0.0' }).then(() => {
+  app.listen({ port, host: '0.0.0.0' }).then(async () => {
     app.log.info(`🚀 Server running on http://localhost:${port}`);
     app.log.info('📊 Database initialized and ready');
+    
+    // Initialize Crust Network connection
+    try {
+      app.log.info('🌐 Initializing Crust Network...');
+      await initializeCrustNetwork();
+      app.log.info(`🔗 Connected to Crust Network - Account: ${crustNetwork.getAccountAddress()}`);
+      app.log.info(`💰 Account Balance: ${await crustNetwork.getAccountBalance()}`);
+    } catch (error) {
+      app.log.error('❌ Failed to initialize Crust Network:', error);
+      app.log.warn('⚠️ Server will continue with fallback storage');
+    }
   });
 }
 

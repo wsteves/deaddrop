@@ -1,10 +1,47 @@
 // Storage service for decentralized job postings
-// Supports multiple backends: IPFS, localStorage (dev), server backup
+// Now uses real Crust Network IPFS with storage orders and CRU token payments
 
 export interface StorageProvider {
   store(data: any): Promise<string>; // Returns content hash/ID
   retrieve(id: string): Promise<any>; // Returns stored data
   pin?(id: string): Promise<void>; // Optional pinning for IPFS
+}
+
+export interface CrustNetworkStatus {
+  connected: boolean;
+  accountAddress: string;
+  balance: string;
+  gatewayUrl: string;
+  network: string;
+}
+
+export interface StorageOrderInfo {
+  cid: string;
+  fileSize: number;
+  orderStatus: 'pending' | 'success' | 'failed' | 'expired';
+  replicaCount: number;
+  expiresAt: number;
+  amount: string;
+  gatewayUrl: string;
+  explorerUrl: string;
+}
+
+// Fetch Crust Network status from server
+export async function getCrustNetworkStatus(baseUrl: string = 'http://localhost:4000'): Promise<CrustNetworkStatus> {
+  const response = await fetch(`${baseUrl}/api/crust/status`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Crust status: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+// Get storage order information for a CID
+export async function getStorageOrderInfo(cid: string, baseUrl: string = 'http://localhost:4000'): Promise<StorageOrderInfo> {
+  const response = await fetch(`${baseUrl}/api/crust/order/${cid}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch storage order: ${response.statusText}`);
+  }
+  return response.json();
 }
 
 // Local storage provider (for development)

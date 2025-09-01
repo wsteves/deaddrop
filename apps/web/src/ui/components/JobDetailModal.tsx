@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { fetchJob, fetchJobWithStorage, fetchOnchainListingById, type Job } from '../../lib/api';
 import { useJobModal } from '../JobModalContext';
+import CrustNetworkStatus from './CrustNetworkStatus';
 
 export default function JobDetailModal() {
   const { openId, close } = useJobModal();
@@ -304,20 +305,12 @@ export default function JobDetailModal() {
                       </div>
 
                       <div>
-                        <span className="text-sm text-[var(--text-muted)]">Verification Status</span>
-                        <div className="mt-1">
-                          {job.commitHash ? (
-                            <a
-                              href={`https://westend.subscan.io/extrinsic/${job.commitHash}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium hover:bg-green-100 transition-colors"
-                            >
-                              ✓ Verified On-Chain
-                            </a>
-                          ) : (
-                            <span className="text-[var(--text-muted)]">Not verified</span>
-                          )}
+                        <span className="text-sm text-[var(--text-muted)]">Decentralized Storage</span>
+                        <div className="mt-2">
+                          <CrustNetworkStatus 
+                            cid={(job as any).storageId}
+                            className="text-sm"
+                          />
                         </div>
                       </div>
                     </div>
