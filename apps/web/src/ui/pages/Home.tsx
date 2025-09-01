@@ -1,7 +1,18 @@
 import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { fetchJobs, type Job } from '../../lib/api';
 import JobCard from '../components/JobCard';
 import { Input, Button, Card } from '../components/DesignSystem';
+
+// Marquee item component for the category scroll
+function MarqueeItem({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="relative">
+      <span className="relative z-10">{children}</span>
+      <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-dropout)] opacity-60" />
+    </span>
+  );
+}
 
 export default function Home() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -28,32 +39,98 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      {/* Enhanced Hero Section */}
-      <header className="bg-white border-b border-[var(--border)] relative overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/5 to-[var(--accent-dropout)]/5"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-[var(--accent-dropout)]/10 to-transparent rounded-full -translate-y-48 translate-x-48"></div>
+      {/* Anti-LinkedIn Hero Section */}
+      <motion.header 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="bg-white border-b border-[var(--border)] relative overflow-hidden"
+      >
+        {/* Ambient gradient wash */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.2, delay: 0.2 }}
+          className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/10 via-transparent to-[var(--accent-dropout)]/10"
+        />
         
-        <div className="relative max-w-6xl mx-auto px-6 py-16">
+        {/* Floating blockchain graphic */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+          animate={{ opacity: 0.6, scale: 1, rotate: 0 }}
+          transition={{ duration: 1.5, delay: 0.5 }}
+          className="absolute -right-20 -top-28 w-[34rem] h-[34rem] pointer-events-none"
+        >
+          <div className="absolute inset-0 animate-pulse">
+            <svg viewBox="0 0 600 600" className="w-full h-full">
+              <defs>
+                <linearGradient id="chainGrad" x1="0" x2="1">
+                  <stop offset="0%" stopColor="var(--accent-primary)" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="var(--accent-dropout)" stopOpacity="0.4" />
+                </linearGradient>
+                <pattern id="hexPattern" width="40" height="34.64" patternUnits="userSpaceOnUse">
+                  <path d="M20 0 L40 10 L40 24.64 L20 34.64 L0 24.64 L0 10 Z" fill="none" stroke="url(#chainGrad)" strokeWidth="0.8" />
+                </pattern>
+              </defs>
+              <rect x="0" y="0" width="600" height="600" fill="url(#hexPattern)" />
+              {/* Chain links */}
+              <g>
+                <path d="M160 180 h110 a24 24 0 0 1 0 48 h-110 a24 24 0 0 1 0 -48" fill="none" stroke="url(#chainGrad)" strokeWidth="4" />
+                <path d="M270 180 h110 a24 24 0 0 1 0 48 h-110 a24 24 0 0 1 0 -48" fill="none" stroke="url(#chainGrad)" strokeWidth="4" />
+              </g>
+            </svg>
+          </div>
+        </motion.div>
+        
+        <div className="relative max-w-6xl mx-auto px-6 py-20">
           <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl font-bold text-[var(--text-primary)] mb-6 leading-tight">
-              Discover Your Next
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-dropout)]">
-                Alternative Career
-              </span>
-            </h1>
-            <p className="text-xl text-[var(--text-secondary)] mb-8 leading-relaxed max-w-2xl mx-auto">
-              Professional opportunities beyond traditional employment. Connect with companies that value independence, creativity, and the decentralized future.
-            </p>
+            {/* Bold, rebellious headline */}
+            <motion.h1 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="text-5xl md:text-6xl font-extrabold text-[var(--text-primary)] mb-6 leading-tight"
+            >
+              Find your future
+              <motion.span 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+                className="block text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent-primary)] via-purple-500 to-[var(--accent-dropout)]"
+              >
+                Tune in and <span className="underline decoration-dashed decoration-2">dropout</span>
+              </motion.span>
+            </motion.h1>
+
+            {/* Rotating taglines */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.9 }}
+              className="relative h-8 mb-10 overflow-hidden text-xl md:text-2xl text-[var(--text-secondary)]"
+            >
+              <motion.div 
+                initial={{ y: 20 }}
+                animate={{ y: 0 }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <span className="font-medium">Web3 Job Market. Find. Connect. Build.</span>
+              </motion.div>
+            </motion.div>
             
             {/* Enhanced Search Bar */}
-            <div className="flex items-center justify-center gap-4 max-w-2xl mx-auto mb-8">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1.2 }}
+              className="flex items-center justify-center gap-3 max-w-2xl mx-auto mb-8"
+            >
               <div className="relative flex-1">
                 <Input 
                   value={q} 
                   onChange={e => setQ(e.target.value)} 
-                  placeholder="Search roles, skills, companies..." 
-                  className="pl-12 pr-4 py-4 text-lg rounded-full shadow-lg border-2 border-transparent focus:border-[var(--accent-primary)] bg-white"
+                  placeholder="Search roles, skills, companies…" 
+                  className="h-14 pl-12 pr-4 text-lg rounded-full shadow-lg border-2 border-transparent focus:border-[var(--accent-primary)] bg-white transition-all duration-200 hover:shadow-xl"
                 />
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,29 +138,103 @@ export default function Home() {
                   </svg>
                 </div>
               </div>
-              <Button variant="dropout" size="lg" className="rounded-full px-8 py-4 text-lg shadow-lg">
+              <Button variant="dropout" size="lg" className="h-14 rounded-full px-7 text-lg shadow-lg hover:shadow-xl transition-all duration-200">
                 Search
               </Button>
-            </div>
+            </motion.div>
             
-            {/* Quick Stats */}
-            <div className="flex items-center justify-center gap-8 text-sm text-[var(--text-secondary)]">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-[var(--accent-primary)] rounded-full"></span>
+            {/* Enhanced Stats with icons */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1.5 }}
+              className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm text-[var(--text-secondary)] max-w-3xl mx-auto"
+            >
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 1.7 }}
+                className="flex items-center gap-2"
+              >
+                <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-gradient-to-br from-[var(--accent-primary)] to-transparent shadow">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                  </svg>
+                </span>
                 <span>{jobs.length} active opportunities</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-[var(--accent-dropout)] rounded-full"></span>
+              </motion.div>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 1.9 }}
+                className="flex items-center gap-2"
+              >
+                <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-gradient-to-br from-[var(--accent-dropout)] to-transparent shadow">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </span>
                 <span>{jobs.filter(j => j.commitHash).length} verified positions</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              </motion.div>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 2.1 }}
+                className="flex items-center gap-2"
+              >
+                <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-transparent shadow">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
+                  </svg>
+                </span>
                 <span>Remote-friendly</span>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
-      </header>
+
+        {/* Kinetic category marquee */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 2.5 }}
+          className="relative border-t border-[var(--border)]/70 py-3 bg-gradient-to-r from-transparent via-[var(--surface)] to-transparent"
+        >
+          <div className="flex gap-10 whitespace-nowrap text-xs uppercase tracking-wider text-[var(--text-muted)] animate-scroll">
+            <div className="flex items-center gap-10 px-6">
+              <MarqueeItem>grants</MarqueeItem>
+              <MarqueeItem>bounties</MarqueeItem>
+              <MarqueeItem>daos</MarqueeItem>
+              <MarqueeItem>zk research</MarqueeItem>
+              <MarqueeItem>governance</MarqueeItem>
+              <MarqueeItem>infrastructure</MarqueeItem>
+              <MarqueeItem>hackathons</MarqueeItem>
+              <MarqueeItem>coretime</MarqueeItem>
+              <MarqueeItem>defi</MarqueeItem>
+              <MarqueeItem>parachain dev</MarqueeItem>
+              {/* Duplicate for seamless loop */}
+              <MarqueeItem>grants</MarqueeItem>
+              <MarqueeItem>bounties</MarqueeItem>
+              <MarqueeItem>daos</MarqueeItem>
+              <MarqueeItem>zk research</MarqueeItem>
+              <MarqueeItem>governance</MarqueeItem>
+              <MarqueeItem>infrastructure</MarqueeItem>
+              <MarqueeItem>hackathons</MarqueeItem>
+              <MarqueeItem>coretime</MarqueeItem>
+              <MarqueeItem>defi</MarqueeItem>
+              <MarqueeItem>parachain dev</MarqueeItem>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Accent bottom glow */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5, delay: 3 }}
+          className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--accent-primary)]/10 to-transparent pointer-events-none"
+        />
+      </motion.header>
 
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -231,7 +382,30 @@ export default function Home() {
             <div className="space-y-4">
               {tab === 'saved' ? (
                 savedJobs.length ? (
-                  savedJobs.map(j => <JobCard key={j.id} job={j} useModal />)
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="space-y-4"
+                  >
+                    <AnimatePresence>
+                      {savedJobs.map((j, index) => (
+                        <motion.div
+                          key={j.id}
+                          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                          transition={{ 
+                            duration: 0.4, 
+                            delay: index * 0.05,
+                            ease: "easeOut"
+                          }}
+                        >
+                          <JobCard job={j} useModal />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
                 ) : (
                   <div className="bg-white rounded-xl border border-[var(--border)] p-12 text-center shadow-sm">
                     <div className="text-6xl mb-4">💼</div>
@@ -244,7 +418,30 @@ export default function Home() {
                 )
               ) : tab === 'onchain' ? (
                 jobs.filter(j => j.commitHash).length ? (
-                  jobs.filter(j => j.commitHash).map(j => <JobCard key={j.id} job={j} showPublish useModal />)
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="space-y-4"
+                  >
+                    <AnimatePresence>
+                      {jobs.filter(j => j.commitHash).map((j, index) => (
+                        <motion.div
+                          key={j.id}
+                          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                          transition={{ 
+                            duration: 0.4, 
+                            delay: index * 0.05,
+                            ease: "easeOut"
+                          }}
+                        >
+                          <JobCard job={j} showPublish useModal />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
                 ) : (
                   <div className="bg-white rounded-xl border border-[var(--border)] p-12 text-center shadow-sm">
                     <div className="text-6xl mb-4">🔗</div>
@@ -254,7 +451,30 @@ export default function Home() {
                 )
               ) : (
                 jobs.length ? (
-                  jobs.map(j => <JobCard key={j.id} job={j} showPublish useModal />)
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="space-y-4"
+                  >
+                    <AnimatePresence>
+                      {jobs.map((j, index) => (
+                        <motion.div
+                          key={j.id}
+                          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                          transition={{ 
+                            duration: 0.4, 
+                            delay: index * 0.05,
+                            ease: "easeOut"
+                          }}
+                        >
+                          <JobCard job={j} showPublish useModal />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  </motion.div>
                 ) : (
                   <div className="bg-white rounded-xl border border-[var(--border)] p-12 text-center shadow-sm">
                     <div className="text-6xl mb-4">🔍</div>

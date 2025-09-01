@@ -371,26 +371,15 @@ export { getDb, loadDatabase, saveDatabase };
 export function getAllJobs(page: number = 1, limit: number = 20) {
   const database = getDb();
   const offset = (page - 1) * limit;
-  
-  try {
-    const stmt = database.prepare(`
-      SELECT * FROM jobs 
-      ORDER BY createdAt DESC 
-      LIMIT ? OFFSET ?
-    `);
-    
-    const results = [];
-    stmt.bind([limit, offset]);
-    while (stmt.step()) {
-      results.push(stmt.getAsObject());
-    }
-    stmt.free();
-    
-    return results;
-  } catch (error) {
-    console.error('getAllJobs error:', error);
-    return [];
-  }
+  const stmt = database.prepare(`
+    SELECT j.*, c.name as companyName, c.logo as companyLogo 
+    FROM jobs j 
+    LEFT JOIN companies c ON j.companyId = c.id 
+    WHERE j.verificationStatus != 'archived'
+    ORDER BY j.createdAt DESC 
+    LIMIT ? OFFSET ?
+  `);
+  return stmt.all(limit, offset);
 }
 
 export function getJobById(id: string) {
@@ -409,82 +398,30 @@ export function createJob(data: any, postedBy: string) {
   const id = crypto.randomUUID();
   const now = Date.now();
   
-  console.log('=== DEBUG createJob ===');
-  console.log('Database object:', database);
-  console.log('Generated ID:', id);
-  console.log('Title:', data.title);
-  console.log('Description:', data.description);
-  console.log('PostedBy:', postedBy);
-  
-  // First, let's try to see what's in the jobs table
-  try {
-    const countStmt = database.prepare("SELECT COUNT(*) as count FROM jobs");
-    const countResult = countStmt.get();
-    console.log('Current jobs count:', countResult);
-  } catch (e) {
-    console.log('Could not count jobs:', e);
-  }
-  
-  // Let's try a direct exec first
-  try {
-    console.log('Trying direct exec...');
-    const directQuery = `INSERT INTO jobs (id, title, description, postedBy, employmentType, experienceLevel, remote, createdAt, updatedAt) VALUES ('${id}', '${data.title}', '${data.description}', '${postedBy}', '${data.employmentType}', '${data.experienceLevel}', '${data.remote}', ${now}, ${now})`;
-    console.log('Direct query:', directQuery);
-    database.exec(directQuery);
-    console.log('Direct exec successful!');
-    
-    // Return a simple success object instead of calling getJobById
-    return { 
-      id, 
-      title: data.title, 
-      description: data.description,
-      postedBy,
-      employmentType: data.employmentType,
-      experienceLevel: data.experienceLevel,
-      remote: data.remote,
-      createdAt: now,
-      updatedAt: now,
-      success: true 
-    };
-  } catch (error) {
-    console.error('Direct exec failed:', error);
-    
-    // Now try with prepared statement
-    try {
-      console.log('Trying prepared statement...');
-      const stmt = database.prepare(`
-        INSERT INTO jobs (
-          id, 
-          title, 
-          description, 
-          postedBy, 
-          employmentType, 
-          experienceLevel, 
-          remote, 
-          createdAt, 
-          updatedAt
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-      
-      const result = stmt.run(
-        id,
-        data.title,
-        data.description, 
-        postedBy,
-        data.employmentType,
-        data.experienceLevel,
-        data.remote,
-        now,
-        now
-      );
-      
-      console.log('Prepared statement successful:', result);
-      return getJobById(id);
-    } catch (error2) {
-      console.error('Prepared statement failed:', error2);
-      throw error2;
-    }
-  }
+  const stmt = database.prepare(`
+    INSERT INTO jobs (
+      id, title, slug, description, shortDescription, requirements, responsibilities, benefits,
+      companyId, postedBy, salary, salaryMin, salaryMax, salaryCurrency, equityMin, equityMax,
+      employmentType, experienceLevel, remote, location, timezone, skills, tags, techStack,
+      applicationMethod, applicationEmail, applicationUrl, applicationInstructions,
+      priority, isSponsored, isFeatured, isRemoteFriendly, category, department,
+      verificationStatus, publishedAt, expiresAt, createdAt, updatedAt
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  const slug = data.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || null;
+
+  stmt.run(
+    id, data.title, slug, data.description, data.shortDescription, data.requirements, data.responsibilities, data.benefits,
+    data.companyId, postedBy, data.salary, data.salaryMin, data.salaryMax, data.salaryCurrency || 'EUR', data.equityMin, data.equityMax,
+    data.employmentType, data.experienceLevel, data.remote, data.location, data.timezone, 
+    JSON.stringify(data.skills || []), JSON.stringify(data.tags || []), JSON.stringify(data.techStack || []),
+    data.applicationMethod || 'email', data.applicationEmail, data.applicationUrl, data.applicationInstructions,
+    data.priority || 'normal', data.isSponsored ? 1 : 0, data.isFeatured ? 1 : 0, data.isRemoteFriendly ? 1 : 0, 
+    data.category, data.department, 'published', now, data.expiresAt, now, now
+  );
+
+  return getJobById(id);
 }
 
 export function searchJobs(filters: any) {

@@ -45,19 +45,20 @@ export default function NewJob() {
     try {
       const created = await createJob({
         title,
-        company,
+        description,
+        companyId: company, // Map company to companyId
         location,
         salary: salary ? Number(salary) : undefined,
         salaryMin: salaryMin ? Number(salaryMin) : undefined,
         salaryMax: salaryMax ? Number(salaryMax) : undefined,
-        employmentType,
-        level,
-        remote,
-        contact,
+        employmentType: employmentType.toLowerCase().replace('-', '-') as any, // Ensure correct format
+        experienceLevel: level.toLowerCase() as any, // Map level to experienceLevel
+        remote: remote ? 'remote' : 'onsite' as any, // Convert boolean to enum
+        applicationEmail: contact, // Map contact to applicationEmail
+        applicationMethod: 'email' as any,
         benefits,
-        description,
-        tags: tags || '',
-        images: ['']
+        tags: tags ? tags.split(',').map(t => t.trim()) : [], // Convert comma-separated to array
+        skills: [], // Default empty array
       });
       localStorage.removeItem('jobDraft');
     // Optionally publish on-chain using the user's extension (client-side signing)

@@ -156,7 +156,10 @@ async function main() {
       const body = req.body || {};
       const validatedData = JobCreateSchema.parse(body);
       
-      const job = await createJob(validatedData, (body as any).postedBy);
+      // Extract postedBy from the original body before validation
+      const postedBy = (body as any).postedBy || 'anonymous';
+      
+      const job = await createJob(validatedData, postedBy);
       return reply.code(201).send(normalizeRow(job));
     } catch (error) {
       req.log.error('Error creating job:', error);
@@ -458,7 +461,7 @@ async function main() {
   });
 
   // Start server
-  const port = parseInt(process.env.PORT || '3001', 10);
+  const port = parseInt(process.env.PORT || '4000', 10);
   app.listen({ port, host: '0.0.0.0' }).then(() => {
     app.log.info(`🚀 Server running on http://localhost:${port}`);
     app.log.info('📊 Database initialized and ready');

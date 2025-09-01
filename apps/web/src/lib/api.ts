@@ -28,22 +28,23 @@ export type Listing = {
 export type Job = {
   id: string;
   title: string;
-  company?: string;
+  description: string;
+  companyId?: string;
   location?: string;
   salary?: number | null;
   salaryMin?: number | null;
   salaryMax?: number | null;
-  description?: string;
-  tags?: string;
-  images?: string[];
-  employmentType?: string | null;
-  level?: string | null;
-  remote?: boolean | null;
+  tags?: string[];  // Change to array
+  skills?: string[]; // Add skills array
+  employmentType?: 'full-time' | 'part-time' | 'contract' | 'freelance' | 'internship';
+  experienceLevel?: 'internship' | 'entry' | 'mid' | 'senior' | 'lead' | 'executive';
+  remote?: 'remote' | 'onsite' | 'hybrid'; // Change to enum
   benefits?: string | null;
+  applicationEmail?: string; // Change from contact
+  applicationMethod?: 'email' | 'url' | 'platform';
   createdAt: number;
   commitHash?: string | null;
   blockNumber?: number | null;
-  contact?: string;
 }
 
 export async function fetchListings(params?: { q?: string; region?: string; category?: string; cursor?: string; limit?: number }) {
