@@ -39,86 +39,137 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)]">
-      {/* Anti-LinkedIn Hero Section */}
+      {/* Joyful Anti-Corporate Hero Section */}
       <motion.header 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
-        className="bg-white border-b border-[var(--border)] relative overflow-hidden"
+        className="relative overflow-hidden border-b border-[var(--border)]"
+        style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%)',
+          backgroundSize: '400% 400%',
+          animation: 'gradientShift 15s ease infinite'
+        }}
       >
-        {/* Ambient gradient wash */}
+        {/* Animated gradient overlay */}
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.2, delay: 0.2 }}
-          className="absolute inset-0 bg-gradient-to-br from-[var(--accent-primary)]/10 via-transparent to-[var(--accent-dropout)]/10"
+          className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/10"
         />
         
-        {/* Floating blockchain graphic */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
-          animate={{ opacity: 0.6, scale: 1, rotate: 0 }}
-          transition={{ duration: 1.5, delay: 0.5 }}
-          className="absolute -right-20 -top-28 w-[34rem] h-[34rem] pointer-events-none"
-        >
-          <div className="absolute inset-0 animate-pulse">
-            <svg viewBox="0 0 600 600" className="w-full h-full">
-              <defs>
-                <linearGradient id="chainGrad" x1="0" x2="1">
-                  <stop offset="0%" stopColor="var(--accent-primary)" stopOpacity="0.4" />
-                  <stop offset="100%" stopColor="var(--accent-dropout)" stopOpacity="0.4" />
-                </linearGradient>
-                <pattern id="hexPattern" width="40" height="34.64" patternUnits="userSpaceOnUse">
-                  <path d="M20 0 L40 10 L40 24.64 L20 34.64 L0 24.64 L0 10 Z" fill="none" stroke="url(#chainGrad)" strokeWidth="0.8" />
-                </pattern>
-              </defs>
-              <rect x="0" y="0" width="600" height="600" fill="url(#hexPattern)" />
-              {/* Chain links */}
-              <g>
-                <path d="M160 180 h110 a24 24 0 0 1 0 48 h-110 a24 24 0 0 1 0 -48" fill="none" stroke="url(#chainGrad)" strokeWidth="4" />
-                <path d="M270 180 h110 a24 24 0 0 1 0 48 h-110 a24 24 0 0 1 0 -48" fill="none" stroke="url(#chainGrad)" strokeWidth="4" />
-              </g>
+        {/* Floating geometric shapes */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* Playful circles */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0, x: -100, y: 100 }}
+            animate={{ opacity: 0.6, scale: 1, x: 0, y: 0 }}
+            transition={{ duration: 2, delay: 0.5, ease: "easeOut" }}
+            className="absolute top-20 left-10 w-32 h-32 rounded-full bg-gradient-to-br from-yellow-300/40 to-orange-400/40 blur-sm"
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0, x: 200, y: -50 }}
+            animate={{ opacity: 0.4, scale: 1, x: 0, y: 0 }}
+            transition={{ duration: 2.5, delay: 0.8, ease: "easeOut" }}
+            className="absolute top-40 right-20 w-20 h-20 rounded-full bg-gradient-to-br from-pink-300/50 to-purple-400/50 blur-sm"
+          />
+          <motion.div 
+            initial={{ opacity: 0, scale: 0, x: -150, y: -100 }}
+            animate={{ opacity: 0.5, scale: 1, x: 0, y: 0 }}
+            transition={{ duration: 2.2, delay: 1.1, ease: "easeOut" }}
+            className="absolute bottom-32 left-32 w-16 h-16 rounded-full bg-gradient-to-br from-cyan-300/60 to-blue-400/60 blur-sm"
+          />
+          
+          {/* Geometric decorations */}
+          <motion.div 
+            initial={{ opacity: 0, rotate: -45, scale: 0.5 }}
+            animate={{ opacity: 0.3, rotate: 0, scale: 1 }}
+            transition={{ duration: 3, delay: 0.3, ease: "easeOut" }}
+            className="absolute top-1/4 right-1/4 w-24 h-24 transform rotate-12"
+          >
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+              <polygon points="50,5 90,25 90,75 50,95 10,75 10,25" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="3" />
+              <polygon points="50,15 80,30 80,70 50,85 20,70 20,30" fill="rgba(255,255,255,0.1)" />
             </svg>
-          </div>
-        </motion.div>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ opacity: 0, rotate: 45, scale: 0.3 }}
+            animate={{ opacity: 0.4, rotate: 0, scale: 1 }}
+            transition={{ duration: 2.8, delay: 0.7, ease: "easeOut" }}
+            className="absolute bottom-1/3 right-12 w-16 h-16 transform -rotate-12"
+          >
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+              <rect x="25" y="25" width="50" height="50" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="3" rx="8" />
+              <rect x="35" y="35" width="30" height="30" fill="rgba(255,255,255,0.15)" rx="4" />
+            </svg>
+          </motion.div>
+          
+          {/* Floating sparkles */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: [0, 1, 0], y: [-20, -40, -60] }}
+            transition={{ duration: 3, delay: 1.5, repeat: Infinity, ease: "easeOut" }}
+            className="absolute top-1/3 left-1/3 text-white/60"
+          >
+            ✨
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: [0, 1, 0], y: [-15, -35, -55] }}
+            transition={{ duration: 2.5, delay: 2.2, repeat: Infinity, ease: "easeOut" }}
+            className="absolute top-1/2 right-1/3 text-white/50"
+          >
+            ⭐
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: [0, 1, 0], y: [-25, -45, -65] }}
+            transition={{ duration: 3.5, delay: 1.8, repeat: Infinity, ease: "easeOut" }}
+            className="absolute bottom-1/2 left-1/4 text-white/60"
+          >
+            💫
+          </motion.div>
+        </div>
         
         <div className="relative max-w-6xl mx-auto px-6 py-20">
           <div className="text-center max-w-4xl mx-auto">
-            {/* Bold, rebellious headline */}
+            {/* Bold, joyful headline */}
             <motion.h1 
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="text-5xl md:text-6xl font-extrabold text-[var(--text-primary)] mb-6 leading-tight"
+              className="text-5xl md:text-6xl font-extrabold text-white mb-6 leading-tight drop-shadow-lg"
             >
               Find your future
               <motion.span 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.6 }}
-                className="block text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent-primary)] via-purple-500 to-[var(--accent-dropout)]"
+                className="block text-yellow-200 text-shadow-sm"
               >
-                Tune in and <span className="underline decoration-dashed decoration-2">dropout</span>
+                Tune in and <span className="bg-white/20 px-3 py-1 rounded-full text-white shadow-lg">dropout</span> ✨
               </motion.span>
             </motion.h1>
 
-            {/* Rotating taglines */}
+            {/* Animated taglines */}
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.9 }}
-              className="relative h-8 mb-10 overflow-hidden text-xl md:text-2xl text-[var(--text-secondary)]"
+              className="relative h-8 mb-10 overflow-hidden text-xl md:text-2xl text-white/90"
             >
               <motion.div 
                 initial={{ y: 20 }}
                 animate={{ y: 0 }}
                 className="absolute inset-0 flex items-center justify-center"
               >
-                <span className="font-medium">Web3 Job Market. Find. Connect. Build.</span>
+                <span className="font-medium drop-shadow-sm">Search. Connect. Build. 🚀</span>
               </motion.div>
             </motion.div>
             
-            {/* Enhanced Search Bar */}
+            {/* Enhanced Search Bar with glassmorphism */}
             <motion.div 
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -129,111 +180,195 @@ export default function Home() {
                 <Input 
                   value={q} 
                   onChange={e => setQ(e.target.value)} 
-                  placeholder="Search roles, skills, companies…" 
-                  className="h-14 pl-12 pr-4 text-lg rounded-full shadow-lg border-2 border-transparent focus:border-[var(--accent-primary)] bg-white transition-all duration-200 hover:shadow-xl"
+                  placeholder="Smart contracts..." 
+                  className="h-14 pl-12 pr-4 text-lg rounded-full shadow-2xl border-2 border-white/30 focus:border-white/60 bg-white/20 backdrop-blur-md text-white placeholder:text-white/70 transition-all duration-300 hover:bg-white/30 focus:bg-white/30"
                 />
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-muted)]">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/80">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
               </div>
-              <Button variant="dropout" size="lg" className="h-14 rounded-full px-7 text-lg shadow-lg hover:shadow-xl transition-all duration-200">
-                Search
+              <Button 
+                variant="dropout" 
+                size="lg" 
+                className="h-14 rounded-full px-7 text-lg shadow-2xl bg-white/20 backdrop-blur-md border-2 border-white/30 text-white hover:bg-white/30 hover:border-white/50 transition-all duration-300"
+              >
+                ✨ Search
               </Button>
             </motion.div>
             
-            {/* Enhanced Stats with icons */}
+            {/* Fun Stats with colorful icons */}
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 1.5 }}
-              className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm text-[var(--text-secondary)] max-w-3xl mx-auto"
+              className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm text-white/90 max-w-3xl mx-auto"
             >
               <motion.div 
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 1.7 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20"
               >
-                <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-gradient-to-br from-[var(--accent-primary)] to-transparent shadow">
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                  </svg>
-                </span>
-                <span>{jobs.length} active opportunities</span>
+                <span className="text-lg">🎯</span>
+                <span className="font-medium">{jobs.length} jobs waiting</span>
               </motion.div>
               <motion.div 
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 1.9 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20"
               >
-                <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-gradient-to-br from-[var(--accent-dropout)] to-transparent shadow">
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                </span>
-                <span>{jobs.filter(j => j.commitHash).length} verified positions</span>
+                <span className="text-lg">🔐</span>
+                <span className="font-medium">{jobs.filter(j => j.commitHash).length} blockchain verified</span>
               </motion.div>
               <motion.div 
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 2.1 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20"
               >
-                <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-transparent shadow">
-                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.083 9h1.946c.089-1.546.383-2.97.837-4.118A6.004 6.004 0 004.083 9zM10 2a8 8 0 100 16 8 8 0 000-16zm0 2c-.076 0-.232.032-.465.262-.238.234-.497.623-.737 1.182-.389.907-.673 2.142-.766 3.556h3.936c-.093-1.414-.377-2.649-.766-3.556-.24-.56-.5-.948-.737-1.182C10.232 4.032 10.076 4 10 4zm3.971 5c-.089-1.546-.383-2.97-.837-4.118A6.004 6.004 0 0115.917 9h-1.946zm-2.003 2H8.032c.093 1.414.377 2.649.766 3.556.24.56.5.948.737 1.182.233.23.389.262.465.262.076 0 .232-.032.465-.262.238-.234.498-.623.737-1.182.389-.907.673-2.142.766-3.556zm1.166 4.118c.454-1.147.748-2.572.837-4.118h1.946a6.004 6.004 0 01-2.783 4.118zm-6.268 0C6.412 13.97 6.118 12.546 6.03 11H4.083a6.004 6.004 0 002.783 4.118z" clipRule="evenodd" />
-                  </svg>
-                </span>
-                <span>Remote-friendly</span>
+                <span className="text-lg">🌍</span>
+                <span className="font-medium">Work from anywhere</span>
               </motion.div>
             </motion.div>
           </div>
         </div>
 
-        {/* Kinetic category marquee */}
+        {/* Colorful floating category bubbles */}
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 2.5 }}
-          className="relative border-t border-[var(--border)]/70 py-3 bg-gradient-to-r from-transparent via-[var(--surface)] to-transparent"
+          className="relative border-t border-white/20 py-4 bg-gradient-to-r from-white/5 via-white/10 to-white/5 backdrop-blur-sm"
         >
-          <div className="flex gap-10 whitespace-nowrap text-xs uppercase tracking-wider text-[var(--text-muted)] animate-scroll">
-            <div className="flex items-center gap-10 px-6">
-              <MarqueeItem>grants</MarqueeItem>
-              <MarqueeItem>bounties</MarqueeItem>
-              <MarqueeItem>daos</MarqueeItem>
-              <MarqueeItem>zk research</MarqueeItem>
-              <MarqueeItem>governance</MarqueeItem>
-              <MarqueeItem>infrastructure</MarqueeItem>
-              <MarqueeItem>hackathons</MarqueeItem>
-              <MarqueeItem>coretime</MarqueeItem>
-              <MarqueeItem>defi</MarqueeItem>
-              <MarqueeItem>parachain dev</MarqueeItem>
+          <div className="flex gap-6 whitespace-nowrap text-xs font-medium tracking-wide text-white/80 animate-scroll">
+            <div className="flex items-center gap-6 px-6">
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="bg-gradient-to-r from-yellow-400/30 to-orange-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🏆 grants
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: -5 }}
+                className="bg-gradient-to-r from-pink-400/30 to-purple-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                💰 bounties
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: 3 }}
+                className="bg-gradient-to-r from-blue-400/30 to-cyan-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🏛️ daos
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: -3 }}
+                className="bg-gradient-to-r from-green-400/30 to-emerald-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🔬 zk research
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: 4 }}
+                className="bg-gradient-to-r from-indigo-400/30 to-purple-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🗳️ governance
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: -2 }}
+                className="bg-gradient-to-r from-red-400/30 to-pink-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🏗️ infrastructure
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: 2 }}
+                className="bg-gradient-to-r from-yellow-400/30 to-amber-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                👾 hackathons
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: -4 }}
+                className="bg-gradient-to-r from-teal-400/30 to-cyan-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                ⏰ coretime
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: 3 }}
+                className="bg-gradient-to-r from-violet-400/30 to-purple-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                💎 defi
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: -1 }}
+                className="bg-gradient-to-r from-emerald-400/30 to-green-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🔗 parachain dev
+              </motion.span>
               {/* Duplicate for seamless loop */}
-              <MarqueeItem>grants</MarqueeItem>
-              <MarqueeItem>bounties</MarqueeItem>
-              <MarqueeItem>daos</MarqueeItem>
-              <MarqueeItem>zk research</MarqueeItem>
-              <MarqueeItem>governance</MarqueeItem>
-              <MarqueeItem>infrastructure</MarqueeItem>
-              <MarqueeItem>hackathons</MarqueeItem>
-              <MarqueeItem>coretime</MarqueeItem>
-              <MarqueeItem>defi</MarqueeItem>
-              <MarqueeItem>parachain dev</MarqueeItem>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                className="bg-gradient-to-r from-yellow-400/30 to-orange-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🏆 grants
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: -5 }}
+                className="bg-gradient-to-r from-pink-400/30 to-purple-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                💰 bounties
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: 3 }}
+                className="bg-gradient-to-r from-blue-400/30 to-cyan-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🏛️ daos
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: -3 }}
+                className="bg-gradient-to-r from-green-400/30 to-emerald-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🔬 zk research
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: 4 }}
+                className="bg-gradient-to-r from-indigo-400/30 to-purple-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🗳️ governance
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: -2 }}
+                className="bg-gradient-to-r from-red-400/30 to-pink-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🏗️ infrastructure
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: 2 }}
+                className="bg-gradient-to-r from-yellow-400/30 to-amber-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                👾 hackathons
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: -4 }}
+                className="bg-gradient-to-r from-teal-400/30 to-cyan-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                ⏰ coretime
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: 3 }}
+                className="bg-gradient-to-r from-violet-400/30 to-purple-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                💎 defi
+              </motion.span>
+              <motion.span 
+                whileHover={{ scale: 1.1, rotate: -1 }}
+                className="bg-gradient-to-r from-emerald-400/30 to-green-400/30 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 transition-all cursor-pointer"
+              >
+                🔗 parachain dev
+              </motion.span>
             </div>
           </div>
         </motion.div>
-
-        {/* Accent bottom glow */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1.5, delay: 3 }}
-          className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[var(--accent-primary)]/10 to-transparent pointer-events-none"
-        />
       </motion.header>
 
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -301,7 +436,7 @@ export default function Home() {
                   {savedJobs.slice(0, 3).map((job) => (
                     <div key={job.id} className="p-3 bg-[var(--surface)] rounded-lg border border-[var(--border)] hover:border-[var(--accent-dropout)] transition-colors cursor-pointer">
                       <h4 className="font-medium text-sm text-[var(--text-primary)] truncate">{job.title}</h4>
-                      <p className="text-xs text-[var(--text-secondary)]">{job.company}</p>
+                      <p className="text-xs text-[var(--text-secondary)]">{job.companyId}</p>
                     </div>
                   ))}
                   <Button 

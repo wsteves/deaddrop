@@ -231,13 +231,13 @@ export default function JobCard({ job, showPublish, onPublish, useModal }: { job
                 </motion.a>
               ) : showPublish ? (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button 
+                  {/* <Button 
                     size="sm" 
                     variant="dropout" 
                     onClick={(e) => { e.stopPropagation(); onPublish && onPublish(); }}
                   >
                     Publish
-                  </Button>
+                  </Button> */}
                 </motion.div>
               ) : null}
             </div>
