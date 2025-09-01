@@ -5,6 +5,7 @@ import formBody from '@fastify/formbody';
 import { getDb, loadDatabase, getAllJobs, getJobById, createJob, searchJobs, getUserById, createUser, updateUser, deleteUser, getCompanyById, createCompany, updateCompany, deleteCompany, getUserSkills, addUserSkill, updateUserSkill, deleteUserSkill, getUserWorkExperience, addWorkExperience, updateWorkExperience, deleteWorkExperience, getUserEducation, addEducation, updateEducation, deleteEducation, getJobApplications, createApplication, updateApplication, getApplicationById, getUserApplications, saveJob, unsaveJob, getUserSavedJobs } from './db.js';
 import { JobCreateSchema, JobUpdateSchema, UserCreateSchema, UserUpdateSchema, CompanyCreateSchema, CompanyUpdateSchema, UserSkillCreateSchema, WorkExperienceCreateSchema, EducationCreateSchema, ApplicationCreateSchema, ListingCreateSchema } from './schemas.js';
 import crypto from 'crypto';
+import { crustStorage } from './crust-storage.js';
 
 // Shared API instance (reused across requests)
 let sharedApi: any | null = null;
@@ -178,7 +179,7 @@ async function main() {
   const storageMap = new Map<string, any>();
   const jobStorageMap = new Map<string, string>(); // Maps job ID to storage ID
 
-  // Store data (simulating IPFS)
+  // Store data on Crust IPFS
   app.post('/api/storage/store', async (req, reply) => {
     try {
       const { data } = req.body as any;
@@ -186,42 +187,73 @@ async function main() {
         return reply.code(400).send({ error: 'No data provided' });
       }
 
-      // Generate a content-addressed ID (in real IPFS this would be based on content hash)
-      const id = 'ipfs_' + crypto.randomBytes(16).toString('hex');
+      // Store on Crust IPFS
+      const ipfsHash = await crustStorage.store(data);
       
-      // Store the data
-      storageMap.set(id, {
+      // Also keep in local storage map for faster retrieval (cache)
+      storageMap.set(ipfsHash, {
         data,
         storedAt: Date.now(),
-        version: '1.0'
+        version: '1.0',
+        ipfsHash
       });
 
-      req.log.info(`Stored data with ID: ${id}`);
-      return reply.send({ id, message: 'Data stored successfully' });
+      req.log.info(`🌐 Stored on Crust IPFS: ${ipfsHash}`);
+      return reply.send({ id: ipfsHash, message: 'Data stored on decentralized IPFS' });
     } catch (error) {
-      req.log.error('Error storing data:', error);
-      return reply.code(500).send({ error: 'Failed to store data' });
+      req.log.error('Error storing data on IPFS:', error);
+      
+      // Fallback to local storage if IPFS fails
+      const id = 'local_' + crypto.randomBytes(16).toString('hex');
+      storageMap.set(id, {
+        data: (req.body as any).data,
+        storedAt: Date.now(),
+        version: '1.0',
+        fallback: true
+      });
+      
+      return reply.send({ id, message: 'Data stored locally (IPFS unavailable)', fallback: true });
     }
   });
 
   // Retrieve data
+  // Retrieve data from Crust IPFS
   app.get('/api/storage/retrieve/:id', async (req, reply) => {
     try {
       const id = (req.params as any).id;
-      const stored = storageMap.get(id);
       
-      if (!stored) {
-        return reply.code(404).send({ error: 'Content not found' });
+      // Try local cache first for faster retrieval
+      const cached = storageMap.get(id);
+      if (cached) {
+        return reply.send({ 
+          data: cached.data, 
+          storedAt: cached.storedAt,
+          version: cached.version,
+          source: cached.fallback ? 'local' : 'ipfs-cache'
+        });
       }
 
+      // Retrieve from Crust IPFS
+      const data = await crustStorage.retrieve(id);
+      
+      // Cache the result
+      const result = {
+        data,
+        storedAt: Date.now(),
+        version: '1.0'
+      };
+      storageMap.set(id, result);
+      
+      req.log.info(`🌐 Retrieved from Crust IPFS: ${id}`);
       return reply.send({ 
-        data: stored.data, 
-        storedAt: stored.storedAt,
-        version: stored.version 
+        data,
+        storedAt: result.storedAt,
+        version: result.version,
+        source: 'ipfs'
       });
     } catch (error) {
       req.log.error('Error retrieving data:', error);
-      return reply.code(500).send({ error: 'Failed to retrieve data' });
+      return reply.code(404).send({ error: 'Content not found' });
     }
   });
 
