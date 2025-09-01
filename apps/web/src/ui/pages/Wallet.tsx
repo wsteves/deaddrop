@@ -28,7 +28,7 @@ export default function Wallet() {
 
   async function connect() {
     try {
-      const accs = await connectExtension('Dropout Jobs');
+  const accs = await connectExtension('Polkadot Jobs');
       setAccounts(accs);
       if (accs.length) {
         setSelected(accs[0].address);

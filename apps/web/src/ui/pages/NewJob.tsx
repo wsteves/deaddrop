@@ -64,7 +64,7 @@ export default function NewJob() {
     if (publishOnChain) {
       setStatusMessage('Preparing on-chain publish…');
       try {
-        const accs = await connectExtension('Dropout Jobs');
+  const accs = await connectExtension('Polkadot Jobs');
         if (!accs || accs.length === 0) throw new Error('No accounts available');
         const from = accs[0].address;
         setStatusMessage('Connecting to network…');
@@ -101,78 +101,248 @@ export default function NewJob() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white">
-      <div className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-4">Post a Job</h1>
-        <form className="grid grid-cols-1 lg:grid-cols-2 gap-6" onSubmit={handlePost}>
-          <Card className="p-6">
-            <label className="label">Title</label>
-            <Input value={title} onChange={e=>setTitle(e.target.value)} name="title" disabled={saving} />
+    <div className="min-h-screen bg-[var(--bg-primary)]">
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Post a New Opportunity</h1>
+          <p className="text-[var(--text-secondary)]">Share your open position with the alternative economy community</p>
+        </div>
 
-            <label className="label mt-4">Company</label>
-            <Input value={company} onChange={e=>setCompany(e.target.value)} name="company" disabled={saving} />
-
-            <label className="label mt-4">Location</label>
-            <Input value={location} onChange={e=>setLocation(e.target.value)} name="location" disabled={saving} />
-            <label className="label mt-4">Location</label>
-            <Input value={location} onChange={e=>setLocation(e.target.value)} name="location" disabled={saving} />
-
-            <label className="label mt-4">Salary (single value)</label>
-            <Input value={salary} onChange={e=>setSalary(e.target.value.replace(/[^0-9]/g,''))} name="salary" disabled={saving} />
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <Input value={salaryMin} onChange={e=>setSalaryMin(e.target.value)} placeholder="Min" disabled={saving} />
-              <Input value={salaryMax} onChange={e=>setSalaryMax(e.target.value)} placeholder="Max" disabled={saving} />
+        <form onSubmit={handlePost} className="space-y-8">
+          {/* Basic Information */}
+          <div className="bg-white rounded-lg border border-[var(--border)] p-6">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6 flex items-center">
+              <span className="w-8 h-8 bg-[var(--accent-primary)] text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</span>
+              Basic Information
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Input
+                label="Job Title *"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="Senior Frontend Developer"
+                disabled={saving}
+                required
+              />
+              
+              <Input
+                label="Company Name *"
+                value={company}
+                onChange={e => setCompany(e.target.value)}
+                placeholder="Your Company"
+                disabled={saving}
+                required
+              />
+              
+              <Input
+                label="Location"
+                value={location}
+                onChange={e => setLocation(e.target.value)}
+                placeholder="Remote, Berlin, Global"
+                disabled={saving}
+              />
+              
+              <Input
+                label="Contact Email *"
+                value={contact}
+                onChange={e => setContact(e.target.value)}
+                placeholder="hiring@company.com"
+                disabled={saving}
+                type="email"
+                required
+              />
             </div>
-          </Card>
+          </div>
 
-          <Card className="p-6">
-            <label className="label">Description</label>
-            <Textarea className="h-48" value={description} onChange={e=>setDescription(e.target.value)} name="description" disabled={saving} />
-
-            <label className="label mt-4">Tags (comma separated)</label>
-            <Input value={tags} onChange={e=>setTags(e.target.value)} placeholder="rust, substrate, frontend" disabled={saving} />
-
-            <label className="label mt-4">Contact (email or handle)</label>
-            <Input value={contact} onChange={e=>setContact(e.target.value)} placeholder="contact@dropout.example" disabled={saving} />
-
-            <label className="label mt-4">Benefits</label>
-            <Textarea className="h-24" value={benefits} onChange={e=>setBenefits(e.target.value)} name="benefits" disabled={saving} />
-
-            <div className="mt-4 flex items-center gap-2">
-              <input id="remote" type="checkbox" checked={remote} onChange={e=>setRemote(e.target.checked)} disabled={saving} />
-              <label htmlFor="remote" className="text-sm text-slate-300">Remote friendly</label>
+          {/* Compensation */}
+          <div className="bg-white rounded-lg border border-[var(--border)] p-6">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6 flex items-center">
+              <span className="w-8 h-8 bg-[var(--accent-primary)] text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</span>
+              Compensation & Details
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Input
+                label="Fixed Salary (€/year)"
+                value={salary}
+                onChange={e => setSalary(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder="75000"
+                disabled={saving}
+              />
+              
+              <Input
+                label="Salary Min (€/year)"
+                value={salaryMin}
+                onChange={e => setSalaryMin(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder="60000"
+                disabled={saving}
+              />
+              
+              <Input
+                label="Salary Max (€/year)"
+                value={salaryMax}
+                onChange={e => setSalaryMax(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder="90000"
+                disabled={saving}
+              />
             </div>
-
-            <label className="label mt-4">Level</label>
-            <select value={level} onChange={e=>setLevel(e.target.value)} className="input" disabled={saving}>
-              <option>Intern</option>
-              <option>Junior</option>
-              <option>Mid</option>
-              <option>Senior</option>
-              <option>Lead</option>
-            </select>
-
-            <label className="label mt-4">Employment type</label>
-            <select value={employmentType} onChange={e=>setEmploymentType(e.target.value)} className="input" disabled={saving}>
-              <option>Full-time</option>
-              <option>Part-time</option>
-              <option>Contract</option>
-              <option>Temporary</option>
-              <option>Internship</option>
-            </select>
-
-            <div className="mt-4 flex items-center gap-2">
-              <input id="publish" type="checkbox" checked={publishOnChain} onChange={e=>setPublishOnChain(e.target.checked)} disabled={saving} />
-              <label htmlFor="publish" className="text-sm text-slate-300">Publish on-chain (system.remark)</label>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">Experience Level</label>
+                <select 
+                  value={level} 
+                  onChange={e => setLevel(e.target.value)} 
+                  className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-[var(--accent-primary)]"
+                  disabled={saving}
+                >
+                  <option>Intern</option>
+                  <option>Junior</option>
+                  <option>Mid</option>
+                  <option>Senior</option>
+                  <option>Lead</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">Employment Type</label>
+                <select 
+                  value={employmentType} 
+                  onChange={e => setEmploymentType(e.target.value)} 
+                  className="w-full px-4 py-3 bg-white border border-[var(--border)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-primary)] focus:border-[var(--accent-primary)]"
+                  disabled={saving}
+                >
+                  <option>Full-time</option>
+                  <option>Part-time</option>
+                  <option>Contract</option>
+                  <option>Temporary</option>
+                  <option>Internship</option>
+                </select>
+              </div>
             </div>
-
-            {statusMessage && <div className="mt-3 text-sm text-slate-400">{statusMessage}</div>}
-
-            <div className="mt-6 flex gap-2 justify-end">
-              <Button variant="ghost" type="button" onClick={() => { const preview = { title, company, location, salary, salaryMin, salaryMax, level, employmentType, remote, tags, description, contact, benefits }; localStorage.setItem('jobPreview', JSON.stringify(preview)); try { nav('/preview'); } catch {} }} disabled={saving}>Preview</Button>
-              <Button type="submit" disabled={saving}>{saving ? 'Posting…' : 'Post Job'}</Button>
+            
+            <div className="mt-6">
+              <label className="flex items-center">
+                <input 
+                  id="remote" 
+                  type="checkbox" 
+                  checked={remote} 
+                  onChange={e => setRemote(e.target.checked)} 
+                  disabled={saving}
+                  className="w-4 h-4 text-[var(--accent-primary)] bg-white border-[var(--border)] rounded focus:ring-[var(--accent-primary)]"
+                />
+                <span className="ml-2 text-sm font-medium text-[var(--text-primary)]">Remote-friendly position</span>
+              </label>
             </div>
-          </Card>
+          </div>
+
+          {/* Job Description */}
+          <div className="bg-white rounded-lg border border-[var(--border)] p-6">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-6 flex items-center">
+              <span className="w-8 h-8 bg-[var(--accent-primary)] text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</span>
+              Job Description
+            </h2>
+            
+            <div className="space-y-6">
+              <Textarea
+                label="Role Description *"
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Describe the role, responsibilities, requirements, and what makes this opportunity unique..."
+                className="h-40"
+                disabled={saving}
+                required
+              />
+              
+              <Input
+                label="Skills & Tags"
+                value={tags}
+                onChange={e => setTags(e.target.value)}
+                placeholder="React, TypeScript, Web3, Rust, Remote"
+                disabled={saving}
+              />
+              
+              <Textarea
+                label="Benefits & Perks"
+                value={benefits}
+                onChange={e => setBenefits(e.target.value)}
+                placeholder="Health insurance, flexible hours, learning budget, equity..."
+                className="h-24"
+                disabled={saving}
+              />
+            </div>
+          </div>
+
+          {/* Blockchain Options */}
+          <div className="bg-gradient-to-r from-[var(--accent-dropout-light)] to-purple-50 rounded-lg border border-[var(--accent-dropout)] p-6">
+            <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4 flex items-center">
+              <span className="w-8 h-8 bg-[var(--accent-dropout)] text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">🔗</span>
+              Blockchain Verification
+            </h2>
+            
+            <div className="flex items-start space-x-3">
+              <input 
+                id="publish" 
+                type="checkbox" 
+                checked={publishOnChain} 
+                onChange={e => setPublishOnChain(e.target.checked)} 
+                disabled={saving}
+                className="w-4 h-4 text-[var(--accent-dropout)] bg-white border-[var(--border)] rounded focus:ring-[var(--accent-dropout)] mt-1"
+              />
+              <div>
+                <label htmlFor="publish" className="text-sm font-medium text-[var(--text-primary)] cursor-pointer">
+                  Publish on-chain for verification
+                </label>
+                <p className="text-xs text-[var(--text-secondary)] mt-1">
+                  Cryptographically secure your job posting on the Polkadot network. This creates an immutable record and builds trust with candidates.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Status Message */}
+          {statusMessage && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <div className="animate-spin mr-2 h-4 w-4 border-2 border-[var(--accent-primary)] border-t-transparent rounded-full"></div>
+                <span className="text-sm text-[var(--accent-primary)]">{statusMessage}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center justify-between bg-white rounded-lg border border-[var(--border)] p-6">
+            <Button 
+              variant="ghost" 
+              type="button" 
+              onClick={() => { 
+                const preview = { title, company, location, salary, salaryMin, salaryMax, level, employmentType, remote, tags, description, contact, benefits }; 
+                localStorage.setItem('jobPreview', JSON.stringify(preview)); 
+                try { nav('/preview'); } catch {} 
+              }} 
+              disabled={saving}
+            >
+              Preview Job
+            </Button>
+            
+            <Button 
+              type="submit" 
+              variant="dropout" 
+              disabled={saving || !title || !company || !description || !contact}
+              className="px-8"
+            >
+              {saving ? (
+                <>
+                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  Posting...
+                </>
+              ) : (
+                'Post Opportunity'
+              )}
+            </Button>
+          </div>
         </form>
       </div>
     </div>

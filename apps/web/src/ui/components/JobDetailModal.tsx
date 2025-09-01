@@ -138,75 +138,232 @@ export default function JobDetailModal() {
 
   if (!openId) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" role="dialog" aria-modal="true" onClick={() => close()}>
-      <div className="bg-gradient-to-b from-slate-900 to-slate-800 max-w-6xl w-full mx-4 rounded-xl shadow-xl overflow-hidden" ref={modalRef} onClick={e => e.stopPropagation()}>
-        <div className="flex flex-col lg:flex-row">
-          {loading && <div className="p-8 w-full text-center text-slate-400">Loading…</div>}
-          {!loading && job && (
-            <>
-              <div className="lg:flex-1 p-6">
-                <div className="w-full h-56 lg:h-72 overflow-hidden rounded-lg bg-slate-700">
-                  <img className="w-full h-full object-cover" src={job.images?.[0] || 'https://via.placeholder.com/1200x480'} alt={job.title || 'job image'} />
-                </div>
-                <h2 className="text-2xl font-extrabold mt-4">{job.title}</h2>
-                <div className="flex items-center gap-3 mt-2">
-                  <div className="text-sm text-slate-400">{job.company} · {job.location}</div>
-                  {isLocalOnly && <div className="text-xs px-2 py-1 rounded bg-yellow-900 text-yellow-300">Draft</div>}
-                </div>
+  const salaryLabel = job?.salaryMin || job?.salaryMax ? 
+    `${job.salaryMin || ''}${job.salaryMin && job.salaryMax ? ' – ' : ''}${job.salaryMax || ''} €/year` : 
+    (job?.salary ? `${job.salary} €/year` : 'Salary TBD');
 
-                <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-slate-400">
-                  <div>Level</div>
-                  <div className="font-medium text-slate-200">{job.level || 'Not specified'}</div>
-                  <div>Employment</div>
-                  <div className="font-medium text-slate-200">{job.employmentType || 'Not specified'}</div>
-                  <div>Remote</div>
-                  <div className="font-medium text-slate-200">{job.remote ? 'Remote-friendly' : 'On-site'}</div>
-                  <div>Posted</div>
-                  <div className="font-medium text-slate-200">{new Date(job.createdAt).toLocaleDateString()}</div>
+  return (
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" 
+      role="dialog" 
+      aria-modal="true" 
+      onClick={() => close()}
+    >
+      <div 
+        className="bg-white max-w-5xl w-full max-h-[90vh] rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300" 
+        ref={modalRef} 
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="relative bg-gradient-to-r from-[var(--accent-primary)] to-[var(--accent-dropout)] p-6 text-white">
+          <button 
+            aria-label="Close job details" 
+            className="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center text-white transition-colors"
+            onClick={() => close()}
+          >
+            ✕
+          </button>
+          
+          {loading && (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin h-8 w-8 border-2 border-white border-t-transparent rounded-full mr-3"></div>
+              <span className="text-lg">Loading opportunity details...</span>
+            </div>
+          )}
+          
+          {!loading && job && (
+            <div className="pr-12">
+              <div className="flex items-start gap-4 mb-4">
+                <div className="w-16 h-16 bg-white/20 rounded-lg flex items-center justify-center text-2xl font-bold">
+                  {job.company?.[0]?.toUpperCase() || '?'}
                 </div>
-                {/* Description: prefer explicit description, then try common fallbacks (remarkText/rawJson.description) */}
-                <div className="mt-4 text-slate-300 leading-relaxed whitespace-pre-line">{
-                  (job.description && String(job.description).trim())
-                    ? job.description
-                    : ((job as any).remarkText || (job as any).rawJson?.description || 'No description provided.')
-                }</div>
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {(typeof job.tags === 'string' ? job.tags.split(',') : (job.tags || [])).slice(0,8).map((t:any,i:number) => t ? <span key={i} className="text-xs bg-slate-700 px-2 py-1 rounded">{String(t).trim()}</span> : null)}
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold mb-2">{job.title}</h2>
+                  <div className="flex items-center gap-2 text-white/90">
+                    <span className="font-semibold">{job.company}</span>
+                    <span>•</span>
+                    <span>{job.location}</span>
+                    {isLocalOnly && (
+                      <>
+                        <span>•</span>
+                        <span className="px-2 py-1 bg-yellow-500/20 rounded-md text-xs font-medium">
+                          Draft
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold">{salaryLabel}</div>
+                  {job.commitHash && (
+                    <div className="inline-flex items-center px-3 py-1 bg-white/20 rounded-full text-sm font-medium mt-2">
+                      ✓ Verified
+                    </div>
+                  )}
                 </div>
               </div>
-              <aside className="w-full lg:w-96 p-6 border-l border-slate-700">
-                <div className="font-semibold text-lg">{job.company}</div>
-                <div className="text-sm text-slate-400 mt-2">Contact: {job.contact || '—'}</div>
-                <div className="mt-4">
-                  <div className="text-sm text-slate-400">Benefits</div>
-                  <div className="mt-1 text-sm text-slate-200">{job.benefits || 'Not specified'}</div>
-                </div>
-                <div className="mt-4">
-                  <div className="text-sm text-slate-400">Salary</div>
-                  <div className="mt-1 font-medium">{job.salaryMin || job.salaryMax ? `${job.salaryMin ?? ''}${job.salaryMin && job.salaryMax ? ' – ' : ''}${job.salaryMax ?? ''} €` : (job.salary ? `${job.salary} €` : 'TBD')}</div>
-                </div>
-                <div className="mt-4">
-                  <div className="text-sm text-slate-400">Status</div>
-                  <div className="mt-1">{job.commitHash ? <span className="px-2 py-1 rounded bg-emerald-700 text-sm">Published</span> : <span className="text-slate-400">Not published</span>}</div>
-                </div>
-                <div className="mt-6">
-                  <a className="inline-block w-full text-center px-4 py-2 rounded bg-emerald-600" href={job.contact?.startsWith('http') ? job.contact : `mailto:${job.contact}`}>Apply</a>
-                </div>
-                {job.commitHash && (
-                  <div className="mt-4 text-sm">
-                    <a className="text-slate-300 underline" target="_blank" rel="noreferrer" href={`https://westend.subscan.io/extrinsic/${job.commitHash}`}>View on explorer</a>
+              
+              <div className="flex flex-wrap gap-2">
+                {(typeof job.tags === 'string' ? job.tags.split(',') : (job.tags || [])).slice(0, 6).map((tag: any, i: number) => 
+                  tag ? (
+                    <span key={i} className="px-3 py-1 bg-white/20 rounded-full text-sm font-medium">
+                      {String(tag).trim()}
+                    </span>
+                  ) : null
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex flex-col lg:flex-row max-h-[calc(90vh-200px)] overflow-hidden">
+          {!loading && job && (
+            <>
+              {/* Main Content */}
+              <div className="flex-1 p-6 overflow-y-auto">
+                {job.images?.[0] && (
+                  <div className="w-full h-48 mb-6 overflow-hidden rounded-lg bg-gray-100">
+                    <img 
+                      className="w-full h-full object-cover" 
+                      src={job.images[0]} 
+                      alt={job.title || 'Job image'} 
+                    />
                   </div>
                 )}
+
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-3">About This Role</h3>
+                    <div className="prose prose-gray max-w-none">
+                      <p className="text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
+                        {(job.description && String(job.description).trim())
+                          ? job.description
+                          : ((job as any).remarkText || (job as any).rawJson?.description || 'No description provided.')
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  {job.benefits && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-3">Benefits & Perks</h3>
+                      <p className="text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
+                        {job.benefits}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="bg-[var(--surface)] rounded-lg p-4">
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">Job Details</h3>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-[var(--text-muted)]">Experience Level</span>
+                        <div className="font-medium text-[var(--text-primary)]">{job.level || 'Not specified'}</div>
+                      </div>
+                      <div>
+                        <span className="text-[var(--text-muted)]">Employment Type</span>
+                        <div className="font-medium text-[var(--text-primary)]">{job.employmentType || 'Not specified'}</div>
+                      </div>
+                      <div>
+                        <span className="text-[var(--text-muted)]">Remote Work</span>
+                        <div className="font-medium text-[var(--text-primary)]">{job.remote ? 'Remote-friendly' : 'On-site'}</div>
+                      </div>
+                      <div>
+                        <span className="text-[var(--text-muted)]">Posted</span>
+                        <div className="font-medium text-[var(--text-primary)]">
+                          {new Date(job.createdAt).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sidebar */}
+              <aside className="w-full lg:w-80 bg-[var(--surface)] p-6 border-l border-[var(--border)] overflow-y-auto">
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-4">{job.company}</h3>
+                    
+                    {job.contact && (
+                      <div className="mb-4">
+                        <span className="text-sm text-[var(--text-muted)]">Contact</span>
+                        <div className="text-sm text-[var(--text-primary)] font-medium">{job.contact}</div>
+                      </div>
+                    )}
+
+                    <div className="space-y-4">
+                      <div>
+                        <span className="text-sm text-[var(--text-muted)]">Salary Range</span>
+                        <div className="text-lg font-semibold text-[var(--accent-primary)]">{salaryLabel}</div>
+                      </div>
+
+                      <div>
+                        <span className="text-sm text-[var(--text-muted)]">Verification Status</span>
+                        <div className="mt-1">
+                          {job.commitHash ? (
+                            <a
+                              href={`https://westend.subscan.io/extrinsic/${job.commitHash}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium hover:bg-green-100 transition-colors"
+                            >
+                              ✓ Verified On-Chain
+                            </a>
+                          ) : (
+                            <span className="text-[var(--text-muted)]">Not verified</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-6 border-t border-[var(--border)]">
+                    <a 
+                      className="block w-full text-center py-3 px-4 bg-[var(--accent-dropout)] text-white rounded-lg font-semibold hover:bg-purple-600 transition-colors"
+                      href={job.contact?.startsWith('http') ? job.contact : `mailto:${job.contact}`}
+                    >
+                      Apply Now
+                    </a>
+                    
+                    <button 
+                      className="block w-full text-center py-2 px-4 border border-[var(--border)] text-[var(--text-primary)] rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(window.location.origin + '/job/' + job.id);
+                        // You could add a toast here if available
+                      }}
+                    >
+                      Share Job
+                    </button>
+                    
+                    <button 
+                      className="block w-full text-center py-2 px-4 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      onClick={() => {
+                        // Save job logic here
+                      }}
+                    >
+                      Save for Later
+                    </button>
+                  </div>
+                </div>
               </aside>
             </>
           )}
+          
           {!loading && !job && (
-            <div className="p-6">No details available for this job.</div>
+            <div className="flex-1 p-6 text-center">
+              <div className="py-12">
+                <div className="text-4xl mb-4">🔍</div>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">Job Not Found</h3>
+                <p className="text-[var(--text-secondary)]">The job details you're looking for are not available.</p>
+              </div>
+            </div>
           )}
-        </div>
-        <div className="absolute top-4 right-4">
-          <button aria-label="Close job details" className="text-slate-300 bg-slate-700/40 hover:bg-slate-700/60 rounded-full p-2" onClick={() => close()}>✕</button>
         </div>
       </div>
     </div>

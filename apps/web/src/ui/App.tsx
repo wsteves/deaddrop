@@ -19,9 +19,9 @@ function RedirectLToJob() {
 export default function App() {
   return (
     <JobModalProvider>
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 to-gray-900 text-slate-100">
+      <div className="min-h-screen bg-[var(--bg-primary)]">
         <Header />
-        <main className="container mx-auto py-6 px-4">
+        <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/new" element={<NewJob />} />
@@ -32,11 +32,26 @@ export default function App() {
             <Route path="/wallet" element={<Wallet />} />
           </Routes>
         </main>
-        <footer className="container mx-auto py-10 text-center text-slate-400">
-          Demo only. On-chain commitments use system.remark.
-        </footer>
         <JobDetailModal />
-  <Toaster position="bottom-right" />
+        <Toaster 
+          position="bottom-right" 
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: 'white',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+            },
+            success: {
+              iconTheme: {
+                primary: 'var(--accent-dropout)',
+                secondary: 'white',
+              },
+            },
+          }}
+        />
       </div>
     </JobModalProvider>
   );
