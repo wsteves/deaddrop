@@ -83,6 +83,8 @@ export class ServerStorageProvider implements StorageProvider {
   }
 
   async store(data: any): Promise<string> {
+    console.log(`📡 Sending to server: ${this.baseUrl}/api/storage/store`);
+    
     const response = await fetch(`${this.baseUrl}/api/storage/store`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -90,10 +92,13 @@ export class ServerStorageProvider implements StorageProvider {
     });
     
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Server responded with ${response.status}: ${errorText}`);
       throw new Error(`Storage failed: ${response.statusText}`);
     }
     
     const result = await response.json();
+    console.log(`🌐 Server returned IPFS CID: ${result.id}`);
     return result.id;
   }
 
@@ -131,13 +136,18 @@ export class StorageManager {
     };
 
     // Try providers in order
-    for (const provider of this.providers) {
+    for (let i = 0; i < this.providers.length; i++) {
+      const provider = this.providers[i];
+      const providerName = provider.constructor.name;
+      
       try {
+        console.log(`🔄 Attempting to store with ${providerName}...`);
         const id = await provider.store(enrichedData);
         this.cache.set(id, enrichedData);
+        console.log(`✅ Successfully stored with ${providerName}: ${id}`);
         return id;
       } catch (error) {
-        console.warn('Storage provider failed:', error);
+        console.warn(`❌ ${providerName} failed:`, error);
         continue;
       }
     }
@@ -185,13 +195,16 @@ export function createDefaultStorage(): StorageManager {
 
   // Add server provider if available
   try {
-    providers.push(new ServerStorageProvider());
-  } catch {
-    console.warn('Server storage not available');
+    const serverProvider = new ServerStorageProvider();
+    providers.push(serverProvider);
+    console.log('✅ ServerStorageProvider initialized - will use real IPFS');
+  } catch (error) {
+    console.warn('⚠️ Server storage not available:', error);
   }
 
   // Always add local storage as fallback
   providers.push(new LocalStorageProvider());
+  console.log(`📦 Storage providers: ${providers.map(p => p.constructor.name).join(', ')}`);
 
   return new StorageManager(providers);
 }
