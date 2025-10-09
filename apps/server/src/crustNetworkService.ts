@@ -153,6 +153,51 @@ export class CrustNetworkService {
     }
   }
 
+  // Store raw buffer data (no JSON wrapper)
+  async storeRawData(buffer: Buffer): Promise<{ cid: string; storageOrder: StorageOrder }> {
+    try {
+      if (!this.initialized) {
+        await this.initialize();
+      }
+
+      console.log(`📦 Storing raw data: ${buffer.length} bytes`);
+
+      // Upload buffer directly to IPFS
+      const { cid, size } = await this.uploadRawToIPFS(buffer);
+      console.log(`✅ Raw data uploaded to IPFS with CID: ${cid}`);
+
+      // Place storage order on Crust Network
+      const storageOrder = await this.placeStorageOrder(cid, size);
+      console.log(`✅ Storage order placed: ${JSON.stringify(storageOrder)}`);
+
+      return { cid, storageOrder };
+    } catch (error) {
+      console.error('❌ Failed to store raw data on Crust Network:', error);
+      throw error;
+    }
+  }
+
+  private async uploadRawToIPFS(buffer: Buffer): Promise<{ cid: string; size: number }> {
+    try {
+      // Upload raw buffer to IPFS
+      const result = await this.ipfs.add(buffer, {
+        pin: true,
+        cidVersion: 1
+      });
+
+      const cid = result.cid.toString();
+
+      // Get file statistics
+      const stats = await this.ipfs.files.stat(`/ipfs/${cid}`);
+      const size = stats.cumulativeSize;
+
+      return { cid, size };
+    } catch (error) {
+      console.error('Failed to upload raw data to IPFS:', error);
+      throw new Error(`IPFS raw upload failed: ${error}`);
+    }
+  }
+
   private async uploadToIPFS(content: string): Promise<{ cid: string; size: number }> {
     try {
       // Upload to IPFS
@@ -225,22 +270,70 @@ export class CrustNetworkService {
   async retrieveData(cid: string): Promise<any> {
     await this.initialize();
 
+    let buffer: Buffer;
+
     try {
-      // Try to retrieve from IPFS
+      // Try to retrieve from IPFS client
       const chunks = [];
       for await (const chunk of this.ipfs.cat(cid)) {
         chunks.push(chunk);
       }
+      buffer = Buffer.concat(chunks);
+      console.log(`📥 Retrieved from IPFS client: ${cid}`);
 
-      const content = Buffer.concat(chunks).toString();
+    } catch (ipfsError) {
+      console.warn(`⚠️ IPFS client failed, trying public gateways for ${cid}`);
+      
+      // Fallback to public IPFS gateways
+      const gateways = [
+        'https://ipfs.io/ipfs',
+        'https://cloudflare-ipfs.com/ipfs',
+        'https://gateway.pinata.cloud/ipfs',
+        'https://dweb.link/ipfs'
+      ];
+
+      let retrieved = false;
+      for (const gateway of gateways) {
+        try {
+          const response = await fetch(`${gateway}/${cid}`, {
+            signal: AbortSignal.timeout(10000) // 10 second timeout
+          });
+
+          if (response.ok) {
+            const arrayBuffer = await response.arrayBuffer();
+            buffer = Buffer.from(arrayBuffer);
+            console.log(`📥 Retrieved from gateway ${gateway}: ${cid}`);
+            retrieved = true;
+            break;
+          }
+        } catch (gatewayError) {
+          console.warn(`Gateway ${gateway} failed:`, gatewayError);
+          continue;
+        }
+      }
+
+      if (!retrieved) {
+        console.error(`❌ All retrieval methods failed for ${cid}`);
+        throw new Error(`Failed to retrieve content from IPFS: ${cid}`);
+      }
+    }
+
+    const content = buffer!.toString();
+
+    // Try to parse as JSON first (for wrapped storage format)
+    try {
       const parsed = JSON.parse(content);
-
-      console.log(`📥 Retrieved data from IPFS: ${cid}`);
+      console.log(`� Parsed as JSON data: ${cid}`);
       return parsed;
-
-    } catch (error) {
-      console.error(`Failed to retrieve data from IPFS: ${cid}`, error);
-      throw error;
+    } catch (jsonError) {
+      // Not JSON - return as raw data object
+      console.log(`� Raw data (non-JSON): ${cid}`);
+      return {
+        data: {
+          content: Array.from(buffer!), // Convert to byte array for consistency
+          raw: true
+        }
+      };
     }
   }
 

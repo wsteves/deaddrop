@@ -87,7 +87,11 @@ function decodeRemark(arg: any): { rawHex: string | null; text: string | null; j
 async function main() {
   await loadDatabase(); // This already initializes the database schema
   
-  const app = Fastify({ logger: true });
+  // Configure Fastify with 100MB body limit for file uploads
+  const app = Fastify({ 
+    logger: true,
+    bodyLimit: 100 * 1024 * 1024 // 100 MB
+  });
   await app.register(cors, { origin: true });
   await app.register(formBody);
 
@@ -299,6 +303,43 @@ async function main() {
   const jobStorageMap = new Map<string, string>(); // Maps job ID to storage ID
 
   // Store data on Crust IPFS
+  // Store raw file (no JSON wrapper) - for public plain files
+  app.post('/api/storage/store-raw', async (req, reply) => {
+    try {
+      const { data, metadata } = req.body as any;
+      if (!data) {
+        return reply.code(400).send({ error: 'No data provided' });
+      }
+
+      // Convert array of bytes back to Buffer for IPFS
+      const buffer = Buffer.from(data);
+      
+      // Store raw bytes directly on IPFS (no JSON wrapper)
+      const result = await crustNetwork.storeRawData(buffer);
+      const ipfsHash = result.cid;
+      
+      // Store metadata separately for our app to retrieve
+      if (metadata) {
+        storageMap.set(`metadata_${ipfsHash}`, {
+          ...metadata,
+          cid: ipfsHash,
+          storedAt: Date.now(),
+          rawFile: true
+        });
+      }
+
+      req.log.info(`🌐 Stored raw file on Crust IPFS: ${ipfsHash}`);
+      return reply.send({ 
+        id: ipfsHash, 
+        message: 'Raw file stored on IPFS',
+        url: `https://ipfs.io/ipfs/${ipfsHash}`
+      });
+    } catch (error) {
+      req.log.error('Error storing raw data:', error);
+      return reply.code(500).send({ error: 'Failed to store raw data' });
+    }
+  });
+
   app.post('/api/storage/store', async (req, reply) => {
     try {
       const { data } = req.body as any;
