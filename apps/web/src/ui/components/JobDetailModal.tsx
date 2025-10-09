@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { fetchJob, fetchJobWithStorage, fetchOnchainListingById, type Job } from '../../lib/api';
+import { fetchJob, fetchJobWithStorage, fetchOnchainListingById } from '../../lib/api';
 import { useJobModal } from '../JobModalContext';
 import CrustNetworkStatus from './CrustNetworkStatus';
 
 export default function JobDetailModal() {
   const { openId, close } = useJobModal();
-  const [job, setJob] = useState<Job | null>(null);
+  const [job, setJob] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [isLocalOnly, setIsLocalOnly] = useState(false);
   const modalRef = useRef<HTMLDivElement | null>(null);
@@ -28,17 +28,13 @@ export default function JobDetailModal() {
           return;
         }
 
-        const on = await fetchOnchainListingById(openId).catch((err: any) => ({ __error: err }));
+        const on = await fetchOnchainListingById(openId).catch(() => ({ __error: true }));
         let candidate: any = null;
         if (on && !on.__error) {
-          if (on.job) candidate = on.job;
-          else if (on.listing) candidate = on.listing;
-          else if (on.rawJson) candidate = on.rawJson;
+          candidate = on.job || on.listing || on.rawJson || null;
         }
 
         if (candidate) {
-          // If the on-chain remark was a primitive (e.g. a plain string like 'hero'),
-          // normalize into a job-like object so the modal can render title/description.
           if (typeof candidate !== 'object' || candidate === null) {
             const text = String(candidate);
             const normalized: any = {
@@ -51,7 +47,7 @@ export default function JobDetailModal() {
               location: ''
             };
             if (!mounted) return;
-            setJob(normalized as Job);
+            setJob(normalized);
           } else if (candidate.title) {
             if (!mounted) return;
             candidate.images = candidate.images || [];
@@ -62,9 +58,8 @@ export default function JobDetailModal() {
               candidate.location = candidate.region || '';
               candidate.contact = candidate.seller || '';
             }
-            setJob(candidate as Job);
+            setJob(candidate);
           } else {
-            // object but missing title: still normalize using available fields
             if (!mounted) return;
             candidate.images = candidate.images || [];
             candidate.tags = Array.isArray(candidate.tags) ? candidate.tags.join(', ') : (candidate.tags || '');
@@ -74,7 +69,7 @@ export default function JobDetailModal() {
               description: candidate.description || candidate.remarkText || '',
               ...candidate
             };
-            setJob(normalized as Job);
+            setJob(normalized);
           }
         } else {
           const local = await fetchJobWithStorage(openId).catch(() => null);

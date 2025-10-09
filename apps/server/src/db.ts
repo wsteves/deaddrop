@@ -344,6 +344,25 @@ async function createTables() {
   db.run('CREATE INDEX IF NOT EXISTS idx_user_skills_user ON user_skills(userId);');
   db.run('CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(userId);');
   db.run('CREATE INDEX IF NOT EXISTS idx_saved_jobs_user ON saved_jobs(userId);');
+  // Messages table for encrypted off-chain messages with IPFS pointers
+  db.run(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id TEXT PRIMARY KEY,
+      senderId TEXT NOT NULL,
+      recipientId TEXT NOT NULL,
+      storageId TEXT NOT NULL,
+      sealedKey TEXT, -- sealed symmetric key for recipient
+      subject TEXT,
+      snippet TEXT,
+      isRead INTEGER DEFAULT 0,
+      deliveredAt INTEGER,
+      createdAt INTEGER NOT NULL,
+      FOREIGN KEY (senderId) REFERENCES users(id),
+      FOREIGN KEY (recipientId) REFERENCES users(id)
+    );
+  `);
+  db.run('CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages(recipientId);');
+  db.run('CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(senderId);');
 
   console.log('Database initialized');
   } catch (error) {
@@ -768,6 +787,35 @@ export function updateWorkExperience(experienceId: string, data: any) {
 export function deleteWorkExperience(experienceId: string) {
   const stmt = db.prepare('DELETE FROM work_experience WHERE id = ?');
   return stmt.run(experienceId);
+}
+
+// Messaging helpers
+export function createMessage(data: any) {
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  // Use direct SQL exec to avoid prepared-statement binding issues in this environment
+  const safe = (s: any) => s === null || s === undefined ? 'NULL' : `'${String(s).replace(/'/g, "''")}'`;
+  const sql = `INSERT INTO messages (id, senderId, recipientId, storageId, sealedKey, subject, snippet, isRead, deliveredAt, createdAt) VALUES (${safe(id)}, ${safe(data.senderId)}, ${safe(data.recipientId)}, ${safe(data.storageId)}, ${safe(data.sealedKey || null)}, ${safe(data.subject || null)}, ${safe(data.snippet || null)}, 0, ${safe(data.deliveredAt || null)}, ${now})`;
+  db.exec(sql);
+  const getStmt = db.prepare('SELECT * FROM messages WHERE id = ?');
+  return getStmt.get(id);
+}
+
+export function getMessagesForUser(userId: string, limit: number = 50, page: number = 1) {
+  const offset = (page - 1) * limit;
+  const stmt = db.prepare('SELECT * FROM messages WHERE recipientId = ? ORDER BY createdAt DESC LIMIT ? OFFSET ?');
+  return stmt.all(userId, limit, offset);
+}
+
+export function getMessageById(id: string) {
+  const stmt = db.prepare('SELECT * FROM messages WHERE id = ?');
+  return stmt.get(id);
+}
+
+export function markMessageRead(id: string) {
+  const stmt = db.prepare('UPDATE messages SET isRead = 1 WHERE id = ?');
+  stmt.run(id);
+  return getMessageById(id);
 }
 
 // Education functions
