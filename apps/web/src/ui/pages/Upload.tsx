@@ -80,13 +80,16 @@ export async function decryptData(encryptedData: Uint8Array, password: string): 
 export default function Upload() {
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
-    const [results, setResults] = useState<Array<{ id: string; name: string; signature?: string; encrypted?: boolean; txHash?: string }>>([]);
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>({});
+  const [results, setResults] = useState<Array<{ id: string; name: string; signature?: string; encrypted?: boolean; txHash?: string }>>([]);
   const [walletAddress, setWalletAddress] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [usePassword, setUsePassword] = useState<boolean>(false);
   const [textMessage, setTextMessage] = useState<string>('');
   const [showTextInput, setShowTextInput] = useState<boolean>(false);
   const [storeRaw, setStoreRaw] = useState<boolean>(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -110,14 +113,24 @@ export default function Upload() {
     };
   }, []);
 
-  function onDrop(e: React.DragEvent) {
-    e.preventDefault();
-    const dropped = Array.from(e.dataTransfer.files || []);
-    setFiles(prev => prev.concat(dropped));
-  }
-
   function onDragOver(e: React.DragEvent) {
     e.preventDefault();
+    setIsDragging(true);
+  }
+
+  function onDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragging(false);
+  }
+
+  function onDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files.length) {
+      const newFiles = Array.from(e.dataTransfer.files);
+      setFiles(prev => [...prev, ...newFiles]);
+      toast.success(`Added ${newFiles.length} ${newFiles.length === 1 ? 'file' : 'files'} to queue!`);
+    }
   }
 
   function pickFiles() {
@@ -171,6 +184,9 @@ export default function Upload() {
 
       for (const f of files) {
         try {
+          // Initialize progress for this file
+          setUploadProgress(prev => ({ ...prev, [f.name]: 0 }));
+          
           const array = await f.arrayBuffer();
           let fileData = Array.from(new Uint8Array(array));
           let isEncrypted = false;
@@ -178,13 +194,16 @@ export default function Upload() {
           // Encrypt if password is provided
           if (usePassword && password) {
             try {
+              setUploadProgress(prev => ({ ...prev, [f.name]: 10 }));
               const encrypted = await encryptData(new Uint8Array(array), password);
               fileData = Array.from(encrypted);
               isEncrypted = true;
               toast.loading(`🔒 Encrypting ${f.name}...`);
+              setUploadProgress(prev => ({ ...prev, [f.name]: 25 }));
             } catch (encErr) {
               toast.dismiss();
               toast.error(`Encryption failed for ${f.name}`);
+              setUploadProgress(prev => ({ ...prev, [f.name]: -1 })); // Error state
               continue;
             }
           }
@@ -204,6 +223,7 @@ export default function Upload() {
           
           // Sign the message with the wallet
           toast.loading(`Signing ${f.name}...`);
+          setUploadProgress(prev => ({ ...prev, [f.name]: usePassword ? 35 : 15 }));
           const signRaw = injector?.signer?.signRaw;
           if (!signRaw) {
             throw new Error('Wallet does not support signing');
@@ -217,6 +237,7 @@ export default function Upload() {
 
           toast.dismiss();
           toast.loading(`Uploading ${f.name} to IPFS...`);
+          setUploadProgress(prev => ({ ...prev, [f.name]: usePassword ? 50 : 40 }));
 
           // Add signature to payload
           const signedPayload = {
@@ -245,11 +266,13 @@ export default function Upload() {
             });
             const result = await response.json();
             id = result.id;
+            setUploadProgress(prev => ({ ...prev, [f.name]: 70 }));
             toast.dismiss();
             toast.success(`✅ ${f.name} stored as raw file! Accessible at: ${result.url}`);
           } else {
             // Store with JSON wrapper (includes metadata)
             id = await defaultStorage.store(signedPayload);
+            setUploadProgress(prev => ({ ...prev, [f.name]: 70 }));
           }
           
           // Store CID on-chain using system.remark
@@ -295,6 +318,7 @@ export default function Upload() {
             // Continue anyway - on-chain storage is optional
           }
           
+          setUploadProgress(prev => ({ ...prev, [f.name]: 100 }));
           res.push({ id, name: f.name, signature, encrypted: isEncrypted, txHash });
           saveRecent({ id, name: f.name, size: f.size, type: f.type, signature, uploadedBy: walletAddress, txHash });
           
@@ -304,6 +328,7 @@ export default function Upload() {
           toast.success(`✓ ${f.name} uploaded${encryptedMsg} & signed${onChainMsg}`);
         } catch (err: any) {
           toast.dismiss();
+          setUploadProgress(prev => ({ ...prev, [f.name]: -1 })); // Error state
           console.error('Upload failed', err);
           if (err.message?.includes('Cancelled')) {
             toast.error(`Signature cancelled for ${f.name}`);
@@ -321,6 +346,13 @@ export default function Upload() {
     setResults(res);
     setFiles([]);
     setUploading(false);
+    setUploadProgress({});
+    
+    // Show celebration if all files uploaded successfully
+    if (res.length > 0) {
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 5000);
+    }
   }
 
   function saveRecent(item: { id: string; name: string; size: number; type: string; signature?: string; uploadedBy?: string; txHash?: string }) {
@@ -406,18 +438,37 @@ export default function Upload() {
             <div
               onDrop={onDrop}
               onDragOver={onDragOver}
-              className="border-3 border-dashed border-purple-300 rounded-2xl p-12 text-center bg-gradient-to-br from-purple-50 via-pink-50 to-purple-50 hover:border-purple-500 transition-all duration-300 group cursor-pointer"
+              onDragLeave={onDragLeave}
+              className={`border-3 border-dashed rounded-2xl p-12 text-center bg-gradient-to-br transition-all duration-300 group cursor-pointer ${
+                isDragging 
+                  ? 'border-green-500 from-green-50 via-emerald-50 to-green-50 scale-105 shadow-2xl' 
+                  : 'border-purple-300 from-purple-50 via-pink-50 to-purple-50 hover:border-purple-500'
+              }`}
               onClick={pickFiles}
             >
               <div className="flex flex-col items-center">
-                <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-xl">
+                <div className={`w-24 h-24 rounded-2xl flex items-center justify-center mb-6 transition-all shadow-xl ${
+                  isDragging 
+                    ? 'bg-gradient-to-br from-green-600 to-emerald-600 scale-125 animate-bounce' 
+                    : 'bg-gradient-to-br from-purple-600 to-pink-600 group-hover:scale-110'
+                }`}>
                   <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-purple-900 mb-2">Drop files here</h3>
-                <p className="text-purple-600 mb-6">or click to browse your device</p>
-                <div className="flex items-center gap-2 text-sm text-purple-500">
+                <h3 className={`text-2xl font-bold mb-2 transition-colors ${
+                  isDragging ? 'text-green-900' : 'text-purple-900'
+                }`}>
+                  {isDragging ? '✨ Drop files now!' : 'Drop files here'}
+                </h3>
+                <p className={`mb-6 transition-colors ${
+                  isDragging ? 'text-green-700 font-semibold' : 'text-purple-600'
+                }`}>
+                  {isDragging ? 'Release to add files to queue' : 'or click to browse your device'}
+                </p>
+                <div className={`flex items-center gap-2 text-sm transition-colors ${
+                  isDragging ? 'text-green-600' : 'text-purple-500'
+                }`}>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -601,108 +652,229 @@ export default function Upload() {
               Clear All
             </button>
           </div>
-          <ul className="space-y-2">
-            {files.map((f, i) => (
-              <li key={i} className="group flex items-center gap-3 p-3 rounded-lg border border-purple-100 hover:border-purple-300 hover:bg-purple-50 transition-all">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                  {f.type === 'text/plain' && f.name.startsWith('message-') ? (
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <div className="font-semibold text-purple-900 truncate">{f.name}</div>
-                    {f.type === 'text/plain' && f.name.startsWith('message-') && (
-                      <span className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                        💬 Text Message
-                      </span>
+          <ul className="space-y-3">
+            {files.map((f, i) => {
+              const progress = uploadProgress[f.name];
+              const isUploading = uploading && progress !== undefined && progress >= 0 && progress < 100;
+              const isComplete = progress === 100;
+              const isError = progress === -1;
+              
+              return (
+                <li key={i} className="group relative">
+                  <div className="flex items-center gap-3 p-3 rounded-lg border border-purple-100 hover:border-purple-300 hover:bg-purple-50 transition-all">
+                    <div className={`w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${isUploading ? 'animate-pulse' : 'group-hover:scale-110'} ${isComplete ? 'bg-gradient-to-br from-green-500 to-emerald-500' : ''} ${isError ? 'bg-gradient-to-br from-red-500 to-rose-500' : ''}`}>
+                      {isComplete ? (
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                        </svg>
+                      ) : isError ? (
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      ) : f.type === 'text/plain' && f.name.startsWith('message-') ? (
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <div className="font-semibold text-purple-900 truncate">{f.name}</div>
+                        {f.type === 'text/plain' && f.name.startsWith('message-') && (
+                          <span className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+                            💬 Text Message
+                          </span>
+                        )}
+                        {isComplete && (
+                          <span className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                            ✓ Uploaded
+                          </span>
+                        )}
+                        {isError && (
+                          <span className="inline-flex items-center px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full">
+                            ✗ Failed
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-sm text-purple-600 flex items-center gap-2">
+                        <span>{Math.round(f.size/1024)} KB</span>
+                        <span>•</span>
+                        <span>{f.type || 'unknown'}</span>
+                        {isUploading && <span className="text-purple-700 font-medium">• {progress}%</span>}
+                      </div>
+                      {/* Progress Bar */}
+                      {isUploading && (
+                        <div className="mt-2 w-full bg-purple-100 rounded-full h-2 overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-purple-600 to-pink-600 rounded-full transition-all duration-300 ease-out"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    {!isUploading && !isComplete && (
+                      <button
+                        onClick={() => setFiles(files.filter((_, idx) => idx !== i))}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title="Remove"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
                     )}
                   </div>
-                  <div className="text-sm text-purple-600 flex items-center gap-2">
-                    <span>{Math.round(f.size/1024)} KB</span>
-                    <span>•</span>
-                    <span>{f.type || 'unknown'}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setFiles(files.filter((_, idx) => idx !== i))}
-                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                  title="Remove"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
 
-      {results.length > 0 && (
-        <div className="mt-6 bg-white p-4 rounded-lg border border-green-200">
-          <div className="flex items-center gap-2 mb-3">
-            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h3 className="font-medium text-green-800">Upload results</h3>
+      {/* Success Celebration */}
+      {showCelebration && (
+        <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-6 rounded-2xl shadow-2xl animate-bounce">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
+                <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Upload Complete!</h2>
+                <p className="text-green-100">{results.length} {results.length === 1 ? 'file' : 'files'} successfully uploaded</p>
+              </div>
+            </div>
           </div>
-          <ul className="mt-2 space-y-3">
+        </div>
+      )}
+
+      {results.length > 0 && (
+        <div className="mt-6 bg-gradient-to-br from-green-50 via-emerald-50 to-green-50 p-6 rounded-2xl border-2 border-green-200 shadow-lg">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
+              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-green-900">Upload Successful! 🎉</h3>
+              <p className="text-sm text-green-700">{results.length} {results.length === 1 ? 'file' : 'files'} ready to share</p>
+            </div>
+          </div>
+          <ul className="space-y-3">
             {results.map(r => (
-              <li key={r.id} className="p-3 bg-green-50 rounded-lg border border-green-200">
-                <div className="flex items-start justify-between mb-2">
+              <li key={r.id} className="group bg-white p-4 rounded-xl border-2 border-green-200 hover:border-green-400 transition-all shadow-sm hover:shadow-md">
+                <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="font-semibold flex items-center gap-2">
-                      {r.name}
-                      {r.encrypted && (
-                        <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">🔒 Encrypted</span>
-                      )}
-                      {r.signature && (
-                        <span className="text-xs bg-green-600 text-white px-2 py-0.5 rounded-full">✓ Signed</span>
-                      )}
-                      {r.txHash && (
-                        <span className="text-xs bg-orange-600 text-white px-2 py-0.5 rounded-full">⛓️ On-chain</span>
-                      )}
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-bold text-gray-900 mb-1">{r.name}</div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {r.encrypted && (
+                            <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full font-semibold">🔒 Encrypted</span>
+                          )}
+                          {r.signature && (
+                            <span className="text-xs bg-green-600 text-white px-2 py-1 rounded-full font-semibold">✓ Signed</span>
+                          )}
+                          {r.txHash && (
+                            <span className="text-xs bg-orange-600 text-white px-2 py-1 rounded-full font-semibold">⛓️ On-chain</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-sm text-[var(--text-secondary)] mt-1">
-                      ID: <code className="text-xs bg-white px-2 py-1 rounded">{r.id}</code>
+                    <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                      <div className="text-xs font-semibold text-gray-600 mb-1">IPFS CID:</div>
+                      <code className="text-sm font-mono text-purple-700 break-all">{r.id}</code>
                     </div>
                     {r.signature && (
-                      <div className="text-xs text-[var(--text-muted)] mt-1">
-                        Signature: <code className="text-xs">{r.signature.slice(0, 20)}...{r.signature.slice(-10)}</code>
+                      <div className="text-xs text-gray-600">
+                        Signature: <code className="text-xs bg-gray-100 px-2 py-0.5 rounded">{r.signature.slice(0, 20)}...{r.signature.slice(-10)}</code>
                       </div>
                     )}
                     {r.txHash && (
-                      <div className="text-xs text-[var(--text-muted)] mt-1">
-                        Transaction: <code className="text-xs">{r.txHash.slice(0, 10)}...{r.txHash.slice(-8)}</code>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Transaction: <code className="text-xs bg-gray-100 px-2 py-0.5 rounded">{r.txHash.slice(0, 10)}...{r.txHash.slice(-8)}</code>
                       </div>
                     )}
                   </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => {
+                        navigator.clipboard.writeText(r.id);
+                        toast.success('CID copied!');
+                      }}
+                      className="flex items-center gap-1.5 text-xs"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      Copy CID
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => window.location.href = `/browse?id=${encodeURIComponent(r.id)}`}
+                      className="flex items-center gap-1.5 text-xs"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Browse
+                    </Button>
+                    {!r.id.startsWith('local_') && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => window.open(`https://ipfs.io/ipfs/${r.id}`, '_blank')}
+                        className="flex items-center gap-1.5 text-xs"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        IPFS
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <a 
-                    href={`/browse?id=${encodeURIComponent(r.id)}`} 
-                    className="text-xs text-purple-700 hover:underline font-medium"
+                <div className="mt-3 pt-3 border-t border-green-200 flex items-center gap-2 flex-wrap text-xs text-gray-600">
+                  <button
+                    onClick={() => {
+                      const shareUrl = !r.id.startsWith('local_') 
+                        ? `https://ipfs.io/ipfs/${r.id}`
+                        : `${window.location.origin}/browse?id=${encodeURIComponent(r.id)}`;
+                      navigator.clipboard.writeText(shareUrl);
+                      toast.success('Share link copied!');
+                    }}
+                    className="flex items-center gap-1 hover:text-purple-700 transition-colors"
                   >
-                    📄 View Details
-                  </a>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                    </svg>
+                    Share Link
+                  </button>
                   {!r.id.startsWith('local_') && (
                     <>
                       <span className="text-gray-300">•</span>
-                      <a 
-                        href={`https://ipfs.io/ipfs/${r.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-blue-700 hover:underline font-medium"
-                      >
-                        📦 IPFS Gateway
-                      </a>
+                      <span className="flex items-center gap-1">
+                        <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                        </svg>
+                        Permanently stored on IPFS
+                      </span>
                     </>
                   )}
                   {r.txHash && (
