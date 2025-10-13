@@ -1,5 +1,5 @@
 {
-  "name": "polka-kleinanzeigen",
+  "name": "dripdrop",
   "private": true,
   "workspaces": [
     "apps/*",

@@ -361,9 +361,61 @@ export default function Browse() {
 
             <div className="mt-6">
               {loading && (
-                <div className="flex items-center justify-center gap-3 py-8 text-purple-600">
-                  <div className="animate-spin rounded-full h-8 w-8 border-3 border-purple-600 border-t-transparent"></div>
-                  <span className="font-medium">Retrieving file...</span>
+                <div className="space-y-4 animate-pulse">
+                  {/* Skeleton Loading */}
+                  <div className="bg-gradient-to-br from-purple-100 via-pink-100 to-purple-100 p-6 rounded-xl border-2 border-purple-200">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-purple-300 rounded-lg"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-purple-300 rounded w-2/3"></div>
+                        <div className="h-3 bg-purple-200 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                    <div className="h-32 bg-purple-200 rounded-lg"></div>
+                  </div>
+                  <div className="flex items-center justify-center gap-3 py-4 text-purple-600">
+                    <div className="animate-spin rounded-full h-8 w-8 border-3 border-purple-600 border-t-transparent"></div>
+                    <span className="font-medium text-lg">Retrieving file from IPFS...</span>
+                  </div>
+                </div>
+              )}
+              {!loading && !content && id && (
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-12 rounded-2xl border-2 border-gray-200 text-center">
+                  <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-700 mb-2">File Not Found</h3>
+                  <p className="text-gray-600 mb-4">The file with ID <code className="bg-gray-200 px-2 py-1 rounded text-sm">{id}</code> could not be retrieved.</p>
+                  <Button onClick={() => {setId(''); setContent(null);}} variant="primary" className="mx-auto">
+                    Try Another ID
+                  </Button>
+                </div>
+              )}
+              {!loading && !content && !id && (
+                <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-purple-50 p-12 rounded-2xl border-2 border-purple-200 text-center">
+                  <div className="w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+                    <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-bold text-purple-900 mb-3">Ready to Browse</h3>
+                  <p className="text-purple-700 mb-6 max-w-md mx-auto">Enter an IPFS CID or file ID above to retrieve and view your stored files. All files are fetched directly from the decentralized IPFS network.</p>
+                  <div className="flex items-center justify-center gap-6 text-sm text-purple-600">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Decentralized Storage</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                      <span>Secure & Private</span>
+                    </div>
+                  </div>
                 </div>
               )}
               {content && (
@@ -561,6 +613,69 @@ export default function Browse() {
                     )}
                   </div>
 
+                  {/* Quick Actions Bar */}
+                  <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-4 rounded-xl shadow-lg mb-4">
+                    <div className="flex items-center justify-between gap-4 flex-wrap">
+                      <div className="flex items-center gap-3">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span className="text-white font-bold text-lg">Quick Actions</span>
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => {
+                            navigator.clipboard.writeText(id);
+                            toast.success('CID copied to clipboard!');
+                          }}
+                          className="bg-white text-purple-700 hover:bg-purple-50 border-0 flex items-center gap-1.5"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                          Copy CID
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => copyToClipboard(qrCodeUrl)}
+                          className="bg-white text-purple-700 hover:bg-purple-50 border-0 flex items-center gap-1.5"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                          </svg>
+                          Share Link
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => downloadAsFile(content)}
+                          className="bg-white text-purple-700 hover:bg-purple-50 border-0 flex items-center gap-1.5"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          Download
+                        </Button>
+                        {!id.startsWith('local_') && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => window.open(`https://ipfs.io/ipfs/${id}`, '_blank')}
+                            className="bg-white text-purple-700 hover:bg-purple-50 border-0 flex items-center gap-1.5"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            Open IPFS
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Enhanced File Info Section */}
                   <div className="bg-white p-5 rounded-xl border-2 border-purple-100 shadow-md">
                     <div className="flex items-start justify-between gap-4">
@@ -655,16 +770,6 @@ export default function Browse() {
                           </div>
                         )}
                       </div>
-                      <Button 
-                        variant="primary" 
-                        onClick={() => downloadAsFile(content)}
-                        className="flex items-center gap-2 shadow-md hover:shadow-lg transition-shadow"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        Download
-                      </Button>
                     </div>
 
                     {/* IPFS Storage Info */}

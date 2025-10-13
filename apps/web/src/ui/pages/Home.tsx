@@ -186,7 +186,7 @@ export default function Home() {
           <div className="pt-16 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             <div className="relative p-6 bg-slate-900/40 backdrop-blur-md border border-purple-500/20 rounded-2xl hover:border-purple-400/50 transition-all duration-300 group hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative">
+              <div className="relative flex flex-col items-center text-center">
                 <div className="w-14 h-14 mb-4 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <svg className="w-7 h-7 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
@@ -199,7 +199,7 @@ export default function Home() {
 
             <div className="relative p-6 bg-slate-900/40 backdrop-blur-md border border-pink-500/20 rounded-2xl hover:border-pink-400/50 transition-all duration-300 group hover:scale-105 hover:shadow-xl hover:shadow-pink-500/20">
               <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative">
+              <div className="relative flex flex-col items-center text-center">
                 <div className="w-14 h-14 mb-4 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <svg className="w-7 h-7 text-pink-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
@@ -212,7 +212,7 @@ export default function Home() {
 
             <div className="relative p-6 bg-slate-900/40 backdrop-blur-md border border-purple-500/20 rounded-2xl hover:border-purple-400/50 transition-all duration-300 group hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative">
+              <div className="relative flex flex-col items-center text-center">
                 <div className="w-14 h-14 mb-4 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
                   <svg className="w-7 h-7 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
@@ -227,7 +227,7 @@ export default function Home() {
           {/* Footer text */}
           <div className="pt-12 text-center">
             <p className="text-purple-400/40 text-xs font-mono tracking-wider">
-              POWERED BY IPFS • BUILT FOR CYPHERPUNKS
+              POWERED BY POLKADOT & IPFS • BUILT FOR CYPHERPUNKS
             </p>
           </div>
         </div>

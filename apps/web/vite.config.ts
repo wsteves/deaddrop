@@ -10,7 +10,7 @@ export default defineConfig({
       output: {
         manualChunks(id: string) {
           if (id.includes('polkadot')) return 'vendor-polkadot';
-          if (id.includes('@polka-kleinanzeigen/chain')) return 'vendor-chain';
+          if (id.includes('@dripdrop/chain')) return 'vendor-chain';
           return undefined;
         }
       }

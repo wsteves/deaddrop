@@ -39,7 +39,7 @@ export async function computeCommit(listing: any) {
     benefits: listing.benefits ?? null,
   };
   // lazy import chain helpers in a browser-safe way
-  const mod = await import('@polka-kleinanzeigen/chain');
+  const mod = await import('@dripdrop/chain');
   const { listingCommitString, commitmentHash } = mod as any;
   const s = listingCommitString(adapted as any);
   const hex = commitmentHash(s);
@@ -49,7 +49,7 @@ export async function computeCommit(listing: any) {
 export async function signRemark(api: any, fromAddress: string, hex: string): Promise<string> {
   const { web3FromAddress } = await import('@polkadot/extension-dapp');
   const injector = await web3FromAddress(fromAddress);
-  const { buildRemark } = require('@polka-kleinanzeigen/chain');
+  const { buildRemark } = require('@dripdrop/chain');
   const tx = buildRemark(api, hex);
   return new Promise((resolve, reject) => {
     tx.signAndSend(fromAddress, { signer: injector.signer }, (result: any) => {

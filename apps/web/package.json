@@ -1,5 +1,5 @@
 {
-  "name": "polka-kleinanzeigen-web",
+  "name": "dripdrop-web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@polka-kleinanzeigen/chain": "0.1.0",
+    "@dripdrop/chain": "0.1.0",
     "@polkadot/api": "^12.1.1",
     "@polkadot/extension-dapp": "^0.47.6",
     "@polkadot/keyring": "^12.1.1",

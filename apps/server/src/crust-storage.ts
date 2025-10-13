@@ -44,7 +44,7 @@ export class CrustIPFSStorage {
         data,
         timestamp: Date.now(),
         version: '1.0',
-        source: 'polka-kleinanzeigen'
+        source: 'dripdrop'
       });
 
       // Add to IPFS
