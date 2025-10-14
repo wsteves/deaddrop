@@ -1,9 +1,7 @@
 
-# Polka Kleinanzeigen (Demo Monorepo)
+# DripDrop
 
-A hybrid, Polkadot-enabled classifieds site inspired by eBay Kleinanzeigen.  
-**On-chain**: listing commitment via `system.remark` (hash of listing).  
-**Off-chain**: listings storage, search, and media (fast and cheap).
+Decentralized file and messge storing with signed messages and on-chain remarks. 
 
 ## Tech
 - React + Vite + TypeScript + Tailwind (apps/web)
