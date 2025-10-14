@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dot Invaders</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: linear-gradient(135deg, #000000 0%, #1a0a1f 50%, #000000 100%);
+        color: #fff;
+        font-family:
+          "Press Start 2P", cursive;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      #game-over,
+      #pause-indicator,
+      #leaderboard,
+      #initials-prompt {
+        position: fixed;
+        font-size: 20px;
+        color: #fff;
+        z-index: 1;
+        border: 3px solid #E6007A;
+        background: rgba(0, 0, 0, 0.9);
+        padding: 20px;
+        text-align: center;
+        border-radius: 10px;
+        box-shadow: 0 0 30px rgba(230, 0, 122, 0.5);
+      }
+
+      #score,
+      #level,
+      #health {
+        position: fixed;
+        font-size: 18px;
+        color: #fff;
+        z-index: 1;
+        padding: 10px 15px;
+        text-align: center;
+        background: rgba(230, 0, 122, 0.2);
+        border: 2px solid #E6007A;
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+      }
+
+      #score {
+        color: #E6007A;
+        top: 10px;
+        left: 10px;
+        text-shadow: 0 0 10px rgba(230, 0, 122, 0.8);
+      }
+
+      #level {
+        top: 60px;
+        left: 10px;
+        color: #fff;
+      }
+
+      #health {
+        top: 110px;
+        left: 10px;
+        color: #fff;
+      }
+
+      #game-over {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: none;
+        font-size: 24px;
+      }
+
+      #pause-indicator {
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: none;
+      }
+
+      #level-title {
+        display: none;
+        position: fixed;
+        font-size: 48px;
+        color: #E6007A;
+        z-index: 1;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-shadow: 0 0 20px rgba(230, 0, 122, 0.8),
+                     0 0 40px rgba(230, 0, 122, 0.6);
+        background: rgba(0, 0, 0, 0.8);
+        padding: 30px 60px;
+        border-radius: 15px;
+        border: 3px solid #E6007A;
+      }
+
+      #leaderboard {
+        display: none;
+        top: 10%;
+        left: 50%;
+        transform: translate(-50%, 0);
+        background: rgba(0, 0, 0, 0.95);
+        max-width: 400px;
+      }
+
+      #leaderboard h2 {
+        color: #E6007A;
+        border-bottom: 3px solid #E6007A;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+        text-shadow: 0 0 10px rgba(230, 0, 122, 0.8);
+      }
+
+      #leaderboard-list {
+        list-style: none;
+        padding: 0;
+      }
+
+      #leaderboard-list li {
+        margin: 10px 0;
+        color: #fff;
+        padding: 5px;
+      }
+
+      #initials-prompt {
+        display: none;
+        top: 70%;
+        left: 50%;
+        transform: translate(-50%, 0);
+        text-align: center;
+      }
+
+      #initials {
+        padding: 8px;
+        font-size: 16px;
+        margin-right: 10px;
+        background: rgba(230, 0, 122, 0.1);
+        border: 2px solid #E6007A;
+        color: #fff;
+        border-radius: 5px;
+        font-family: 'Press Start 2P', cursive;
+      }
+
+      #submit-btn {
+        padding: 8px 15px;
+        font-size: 16px;
+        cursor: pointer;
+        background: #E6007A;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-family: 'Press Start 2P', cursive;
+        transition: all 0.3s;
+      }
+
+      #submit-btn:hover {
+        background: #ff1a8c;
+        box-shadow: 0 0 20px rgba(230, 0, 122, 0.8);
+        transform: scale(1.05);
+      }
+
+      #title {
+        position: fixed;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 32px;
+        color: #E6007A;
+        text-shadow: 0 0 20px rgba(230, 0, 122, 0.8);
+        z-index: 1;
+        letter-spacing: 3px;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+    />
+  </head>
+  <body>
+    <div id="title">DOT INVADERS</div>
+    <div id="score">Score: 0</div>
+    <div id="level">Level: 1</div>
+    <div id="health">Lives: ●●●</div>
+    <div id="game-over">Game Over<br />Press R to Restart</div>
+    <div id="pause-indicator">⏸ Game Paused</div>
+    <div
+      id="level-title"
+      style="
+        display: none;
+        position: fixed;
+        font-family: &quot;Arial&quot;, sans-serif;
+        font-size: 40px;
+        color: white;
+        z-index: 1;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      "
+    ></div>
+    <div id="leaderboard">
+      <h2>Leaderboard</h2>
+      <ol id="leaderboard-list"></ol>
+    </div>
+    <div id="initials-prompt">
+      Enter Initials: <input type="text" id="initials" maxlength="3" />
+      <button id="submit-btn" onclick="saveScore()">Submit</button>
+    </div>
+
+    <script>
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      document.body.appendChild(canvas);
+      
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      // Create Polkadot logo image
+      const polkadotLogo = new Image();
+      polkadotLogo.src = 'data:image/svg+xml,' + encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1326.1 1410.3">
+          <ellipse cx="663" cy="147.9" rx="254.3" ry="147.9" fill="#E6007A"/>
+          <ellipse cx="663" cy="1262.3" rx="254.3" ry="147.9" fill="#E6007A"/>
+          <ellipse cx="180.5" cy="426.5" rx="254.3" ry="147.9" transform="rotate(-60 180.5 426.5)" fill="#E6007A"/>
+          <ellipse cx="1145.6" cy="983.8" rx="254.3" ry="147.9" transform="rotate(-60 1145.6 983.8)" fill="#E6007A"/>
+          <ellipse cx="180.5" cy="983.8" rx="254.3" ry="147.9" transform="rotate(-120 180.5 983.8)" fill="#E6007A"/>
+          <ellipse cx="1145.6" cy="426.5" rx="254.3" ry="147.9" transform="rotate(-120 1145.6 426.5)" fill="#E6007A"/>
+        </svg>
+      `);
+      
+      let player = {
+        x: canvas.width / 2,
+        y: canvas.height - 100,
+        width: 60,
+        height: 60,
+        speed: 5
+      };
+      
+      let bullets = [];
+      let enemies = [];
+      let enemyBullets = [];
+      let particles = [];
+      let stars = [];
+      
+      let level = 1;
+      let score = 0;
+      let lives = 3;
+      let livesAwardedCounter = 0;
+      let gameOver = false;
+      let isPaused = false;
+      let keys = { left: false, right: false, space: false };
+      
+      let enemyDirection = 2;
+      const enemyBulletSpeed = 3;
+      const enemyFireRate = 2000;
+
+      function init() {
+        createStars();
+        createEnemies();
+        
+        document.addEventListener("keydown", onDocumentKeyDown, false);
+        document.addEventListener("keyup", onDocumentKeyUp, false);
+        window.addEventListener('resize', () => {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        });
+
+        animate();
+      }
+
+      function resetGameForNextLevel() {
+        level++;
+        enemyDirection = 2 * level;
+        updateLevelIndicator();
+        enemies = [];
+        enemyBullets = [];
+        createEnemies();
+        startLevelCountdown();
+      }
+
+      function createExplosion(x, y) {
+        for (let i = 0; i < 20; i++) {
+          particles.push({
+            x: x,
+            y: y,
+            vx: (Math.random() - 0.5) * 4,
+            vy: (Math.random() - 0.5) * 4,
+            life: 30,
+            color: '#E6007A'
+          });
+        }
+      }
+
+      function createEnemies() {
+        let enemiesPerRow = Math.min(5 + level, 10);
+        let rowsOfEnemies = Math.min(2 + Math.floor(level / 2), 5);
+        let startX = 100;
+        let startY = 50;
+        let spacing = 60;
+
+        for (let i = 0; i < enemiesPerRow; i++) {
+          for (let j = 0; j < rowsOfEnemies; j++) {
+            const enemy = {
+              x: startX + i * spacing,
+              y: startY + j * spacing,
+              width: 30,
+              height: 30,
+              fireTimer: Math.random() * enemyFireRate
+            };
+            enemies.push(enemy);
+          }
+        }
+      }
+
+      function updateLevelIndicator() {
+        document.getElementById("level").innerHTML = `Level: ${level}`;
+      }
+
+      function createStars() {
+        for (let i = 0; i < 200; i++) {
+          stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2,
+            speed: Math.random() * 0.5 + 0.1
+          });
+        }
+      }
+
+      function onDocumentKeyDown(event) {
+        if (gameOver) {
+          if (event.which === 82) {
+            // Restart game on 'R' key press
+            window.location.reload();
+          }
+          return;
+        }
+
+        const keyCode = event.which;
+        if (keyCode == 37) {
+          keys.left = true;
+        } else if (keyCode == 39) {
+          keys.right = true;
+        } else if (keyCode == 32) {
+          if (!keys.space) {
+            // Fire bullet on initial space press
+            keys.space = true;
+            fireBullet();
+          }
+        } else if (keyCode == 80) {
+          // Pause on 'P' key press
+          togglePause();
+        }
+      }
+
+      function togglePause() {
+        isPaused = !isPaused;
+        document.getElementById("pause-indicator").style.display = isPaused
+          ? "block"
+          : "none";
+      }
+
+      function onDocumentKeyUp(event) {
+        const keyCode = event.which;
+        if (keyCode == 37) {
+          keys.left = false;
+        } else if (keyCode == 39) {
+          keys.right = false;
+        } else if (keyCode == 32) {
+          keys.space = false; // Reset space key status
+        }
+      }
+
+      function fireBullet() {
+        bullets.push({
+          x: player.x,
+          y: player.y,
+          width: 5,
+          height: 15,
+          speed: 7,
+          color: '#D3FF33'
+        });
+        
+        setTimeout(() => {
+          keys.space = false;
+        }, 300);
+      }
+
+      function fireEnemyBullet(enemy) {
+        if (Math.random() < 0.1 * level) {
+          enemyBullets.push({
+            x: enemy.x + enemy.width / 2,
+            y: enemy.y + enemy.height,
+            width: 5,
+            height: 15,
+            speed: enemyBulletSpeed,
+            color: '#FF3333'
+          });
+        }
+      }
+
+      function updateScoreAndLives() {
+        // Award one extra life for every 500 points
+        const targetExtraLives = Math.floor(score / 500);
+
+        // Check if the player should receive additional lives
+        if (targetExtraLives > livesAwardedCounter) {
+          const additionalLives = targetExtraLives - livesAwardedCounter;
+          lives += additionalLives; // Award additional lives
+          livesAwardedCounter = targetExtraLives; // Update the counter
+          updateHealthDisplay();
+        }
+      }
+
+      function shakeScreen(duration = 200) {
+        const startTime = Date.now();
+        const originalTransform = canvas.style.transform;
+        
+        function shake() {
+          if (Date.now() - startTime < duration) {
+            const x = (Math.random() - 0.5) * 10;
+            const y = (Math.random() - 0.5) * 10;
+            canvas.style.transform = `translate(${x}px, ${y}px)`;
+            requestAnimationFrame(shake);
+          } else {
+            canvas.style.transform = originalTransform;
+          }
+        }
+        shake();
+      }
+
+      function startLevelCountdown() {
+        const levelTitleElement = document.getElementById("level-title");
+        levelTitleElement.innerHTML = `Level ${level}`;
+        levelTitleElement.style.display = "block";
+        levelTitleElement.style.fontFamily = "'Press Start 2P', cursive"; // Match the font to the leaderboard
+
+        setTimeout(() => {
+          levelTitleElement.style.display = "none";
+          isPaused = false; // Resume game
+        }, 2000); // Adjust the duration (in milliseconds) as needed
+      }
+
+      function checkForHighScore() {
+        const highScores = getHighScores();
+        if (
+          highScores.length < 5 ||
+          score > highScores[highScores.length - 1].score
+        ) {
+          document.getElementById("initials-prompt").style.display = "block";
+        } else {
+          displayLeaderboard();
+        }
+      }
+
+      function getHighScores() {
+        const highScores = localStorage.getItem("highScores");
+        return highScores ? JSON.parse(highScores) : [];
+        document.getElementById("game-over").style.display = "none";
+      }
+
+      function saveScore() {
+        const initials = document.getElementById("initials").value;
+        const newScore = { score, initials };
+        const highScores = getHighScores();
+        highScores.push(newScore);
+        highScores.sort((a, b) => b.score - a.score);
+        highScores.splice(5);
+        localStorage.setItem("highScores", JSON.stringify(highScores));
+        displayLeaderboard();
+        document.getElementById("initials-prompt").style.display = "none";
+      }
+
+      function displayLeaderboard() {
+        const leaderboardList = document.getElementById("leaderboard-list");
+        leaderboardList.innerHTML = "";
+        const highScores = getHighScores();
+        highScores.forEach((entry) => {
+          const li = document.createElement("li");
+          li.textContent = `${entry.initials}: ${entry.score}`;
+          leaderboardList.appendChild(li);
+        });
+        document.getElementById("leaderboard").style.display = "block";
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        
+        if (gameOver || isPaused) {
+          return;
+        }
+
+        // Clear canvas
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw stars
+        ctx.fillStyle = '#fff';
+        stars.forEach(star => {
+          ctx.fillRect(star.x, star.y, star.size, star.size);
+          star.y += star.speed;
+          if (star.y > canvas.height) {
+            star.y = 0;
+            star.x = Math.random() * canvas.width;
+          }
+        });
+
+        // Move player
+        if (keys.left && player.x > 0) {
+          player.x -= player.speed;
+        }
+        if (keys.right && player.x < canvas.width - player.width) {
+          player.x += player.speed;
+        }
+
+        // Draw player with actual Polkadot logo
+        if (polkadotLogo.complete) {
+          // Add glow effect
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = '#E6007A';
+          ctx.drawImage(polkadotLogo, player.x, player.y, player.width, player.height);
+          ctx.shadowBlur = 0;
+        } else {
+          // Fallback while image loads
+          const gradient = ctx.createRadialGradient(
+            player.x + player.width / 2, player.y + player.height / 2, 0,
+            player.x + player.width / 2, player.y + player.height / 2, player.width / 2
+          );
+          gradient.addColorStop(0, '#ff1a8c');
+          gradient.addColorStop(0.5, '#E6007A');
+          gradient.addColorStop(1, '#b30060');
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Update and draw bullets
+        for (let i = bullets.length - 1; i >= 0; i--) {
+          let bullet = bullets[i];
+          bullet.y -= bullet.speed;
+
+          if (bullet.y < 0) {
+            bullets.splice(i, 1);
+            continue;
+          }
+
+          // Draw player bullet with glow
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = bullet.color;
+          ctx.fillStyle = bullet.color;
+          ctx.beginPath();
+          ctx.arc(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2, bullet.width, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Check collision with enemies
+          for (let j = enemies.length - 1; j >= 0; j--) {
+            let enemy = enemies[j];
+            if (bullet.x < enemy.x + enemy.width &&
+                bullet.x + bullet.width > enemy.x &&
+                bullet.y < enemy.y + enemy.height &&
+                bullet.y + bullet.height > enemy.y) {
+              
+              createExplosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+              enemies.splice(j, 1);
+              bullets.splice(i, 1);
+              score += 10;
+              document.getElementById("score").innerHTML = `Score: ${score}`;
+              updateScoreAndLives();
+              break;
+            }
+          }
+        }
+
+        // Update and draw enemy bullets
+        for (let i = enemyBullets.length - 1; i >= 0; i--) {
+          let bullet = enemyBullets[i];
+          bullet.y += bullet.speed;
+
+          if (bullet.y > canvas.height) {
+            enemyBullets.splice(i, 1);
+            continue;
+          }
+
+          // Draw enemy bullet with glow
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = bullet.color;
+          ctx.fillStyle = bullet.color;
+          ctx.beginPath();
+          ctx.arc(bullet.x + bullet.width / 2, bullet.y + bullet.height / 2, bullet.width, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          // Check collision with player
+          if (bullet.x < player.x + player.width &&
+              bullet.x + bullet.width > player.x &&
+              bullet.y < player.y + player.height &&
+              bullet.y + bullet.height > player.y) {
+            
+            enemyBullets.splice(i, 1);
+            lives -= 1;
+            updateHealthDisplay();
+            shakeScreen();
+
+            if (lives <= 0) {
+              gameOver = true;
+              document.getElementById("game-over").style.display = "block";
+              checkForHighScore();
+              return;
+            }
+          }
+        }
+
+        // Update and draw enemies
+        let hitEdge = false;
+        enemies.forEach(enemy => {
+          enemy.x += enemyDirection;
+          if (enemy.x > canvas.width - enemy.width || enemy.x < 0) {
+            hitEdge = true;
+          }
+
+          // Enemy firing
+          enemy.fireTimer -= 16;
+          if (enemy.fireTimer <= 0) {
+            fireEnemyBullet(enemy);
+            enemy.fireTimer = enemyFireRate + Math.random() * enemyFireRate;
+          }
+
+          // Draw enemy as Polkadot dot
+          const enemyGradient = ctx.createRadialGradient(
+            enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, 0,
+            enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemy.width / 2
+          );
+          enemyGradient.addColorStop(0, '#E6007A');
+          enemyGradient.addColorStop(1, '#8b0049');
+          ctx.fillStyle = enemyGradient;
+          ctx.beginPath();
+          ctx.arc(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemy.width / 2, 0, Math.PI * 2);
+          ctx.fill();
+          
+          // Glow effect
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = '#E6007A';
+          ctx.beginPath();
+          ctx.arc(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, enemy.width / 2, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+
+          if (enemy.y > canvas.height - 100) {
+            gameOver = true;
+            document.getElementById("game-over").style.display = "block";
+            checkForHighScore();
+          }
+        });
+
+        if (hitEdge) {
+          enemyDirection *= -1;
+          enemies.forEach(enemy => enemy.y += 20);
+        }
+
+        // Update and draw particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          let p = particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life--;
+
+          if (p.life <= 0) {
+            particles.splice(i, 1);
+          } else {
+            // Draw particle as glowing dot
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = p.color;
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+          }
+        }
+
+        // Check for level complete
+        if (enemies.length === 0) {
+          resetGameForNextLevel();
+        }
+      }
+
+      function updateHealthDisplay() {
+        const dots = '●'.repeat(lives);
+        document.getElementById("health").innerHTML = `Lives: ${dots}`;
+      }
+
+      init();
+    </script>
+  </body>
+</html>

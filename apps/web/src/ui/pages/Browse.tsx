@@ -754,6 +754,101 @@ export default function Browse() {
                           });
 
                           if (isPrintable && text.trim().length > 0) {
+                            // Check if it's HTML content
+                            const isHtml = content.type === 'text/html' || 
+                              content.filename?.endsWith('.html') || 
+                              content.filename?.endsWith('.htm') ||
+                              text.trim().startsWith('<!DOCTYPE') ||
+                              text.trim().startsWith('<html');
+
+                            if (isHtml) {
+                              // Fix missing library dependencies
+                              let fixedHtml = text;
+                              
+                              // Check if THREE.js is used but not imported
+                              const usesTHREE = fixedHtml.includes('THREE.') || fixedHtml.includes('new THREE') || fixedHtml.match(/THREE\s*\./);
+                              const hasTHREEImport = fixedHtml.includes('three.js') || fixedHtml.includes('three.min.js') || fixedHtml.includes('three.module.js');
+                              
+                              if (usesTHREE && !hasTHREEImport) {
+                                // Inject THREE.js CDN before closing head tag or at start of body
+                                const threeScript = '<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>';
+                                
+                                if (fixedHtml.includes('</head>')) {
+                                  fixedHtml = fixedHtml.replace('</head>', `${threeScript}\n</head>`);
+                                } else if (fixedHtml.includes('<body>')) {
+                                  fixedHtml = fixedHtml.replace('<body>', `<body>\n${threeScript}`);
+                                } else {
+                                  // No head or body tags, prepend to content
+                                  fixedHtml = threeScript + '\n' + fixedHtml;
+                                }
+                              }
+                              
+                              // Create a blob URL for the HTML
+                              const blob = new Blob([fixedHtml], { type: 'text/html' });
+                              const htmlUrl = URL.createObjectURL(blob);
+
+                              return (
+                                <div className="space-y-4">
+                                  <div className="mb-2 flex items-center gap-2">
+                                    <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 font-semibold rounded-full">
+                                      🌐 HTML Document
+                                    </span>
+                                  </div>
+
+                                  {/* HTML Rendered Preview */}
+                                  <div className="bg-white p-4 rounded-xl border-2 border-purple-200 shadow-inner">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <h5 className="font-semibold text-purple-900 text-sm">Live Preview</h5>
+                                      <button
+                                        onClick={() => window.open(htmlUrl, '_blank')}
+                                        className="text-xs px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
+                                      >
+                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                        Open Full Page
+                                      </button>
+                                    </div>
+                                    
+                                    {/* Warning for external dependencies */}
+                                    {(text.includes('cdn.') || text.includes('unpkg.') || text.includes('jsdelivr') || text.includes('THREE')) && (
+                                      <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
+                                        <svg className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                                        </svg>
+                                        <p className="text-xs text-yellow-800">
+                                          <strong>Note:</strong> This HTML uses external libraries. If it doesn't work in preview, click "Open Full Page" for best results.
+                                        </p>
+                                      </div>
+                                    )}
+
+                                    <iframe 
+                                      src={htmlUrl}
+                                      className="w-full border-2 border-gray-300 rounded-lg bg-white"
+                                      style={{ height: '600px' }}
+                                      title="HTML Preview"
+                                      allow="accelerometer; camera; encrypted-media; geolocation; gyroscope; microphone; midi; clipboard-read; clipboard-write"
+                                    />
+                                  </div>
+
+                                  {/* HTML Source Code */}
+                                  <details className="group">
+                                    <summary className="cursor-pointer text-sm font-medium text-purple-600 hover:text-purple-800 flex items-center gap-2 py-2">
+                                      <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"/>
+                                      </svg>
+                                      View HTML Source Code
+                                    </summary>
+                                    <div className="mt-2">
+                                      <div className="bg-gray-900 text-green-400 p-4 rounded-xl font-mono text-xs overflow-auto max-h-96 shadow-inner border-2 border-purple-200 whitespace-pre-wrap break-words">
+                                        {text}
+                                      </div>
+                                    </div>
+                                  </details>
+                                </div>
+                              );
+                            }
+
                             // Try to detect if it's JSON for pretty printing
                             let displayText = text;
                             let isJson = false;
