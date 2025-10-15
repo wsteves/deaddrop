@@ -1,34 +1,12 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "apps/web/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "apps/web/dist"
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/apps/web/dist/$1"
-    }
-  ],
+  "buildCommand": "cd apps/web && npm run build",
+  "outputDirectory": "apps/web/dist",
+  "installCommand": "npm install",
   "rewrites": [
     {
       "source": "/((?!api).*)",
       "destination": "/index.html"
     }
-  ],
-  "env": {
-    "NODE_VERSION": "18.x"
-  },
-  "buildCommand": "cd apps/web && npm run build",
-  "installCommand": "npm install",
-  "framework": null
+  ]
 }
