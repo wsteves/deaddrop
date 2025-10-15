@@ -21,38 +21,40 @@ interface UploadRequest {
   storageType?: 'local' | 'ipfs';
 }
 
-// Upload to IPFS using Crust Network Gateway (same as your original server)
-async function uploadToCrustIPFS(content: string): Promise<string> {
-  console.log('📡 Uploading to Crust Network IPFS...');
+// Upload to IPFS using public IPFS HTTP API
+async function uploadToIPFS(content: string): Promise<string> {
+  console.log('📡 Starting IPFS upload to Crust Network...');
   
+  const formData = new SimpleFormData();
+  formData.append('file', Buffer.from(content), 'data.json');
+
   try {
-    // Use Crust Network gateway - same as your original crustStorage.ts
+    // Use Crust Network IPFS gateway (same as your original Rocky testnet setup)
     const response = await fetch('https://gw.crustfiles.app/api/v0/add', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': formData.getContentType(),
       },
-      body: JSON.stringify({
-        path: 'deaddrop-data.json',
-        content: content,
-      }),
+      body: formData.getBuffer(),
     });
 
     if (!response.ok) {
-      throw new Error(`Crust upload failed: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      console.error(`Crust IPFS upload failed: ${response.status}`, errorText);
+      throw new Error(`IPFS upload failed: ${response.status} ${errorText}`);
     }
 
     const result = await response.json();
-    const cid = result.Hash || result.cid || result.path;
+    const cid = result.Hash;
     
     if (!cid) {
-      throw new Error('No CID returned from Crust Network');
+      throw new Error('No CID returned from IPFS upload');
     }
     
-    console.log(`✅ Uploaded to Crust IPFS: ${cid}`);
+    console.log('✅ IPFS upload successful to Crust Network:', cid);
     return cid;
   } catch (error) {
-    console.error('❌ Crust IPFS upload error:', error);
+    console.error('❌ IPFS upload error:', error);
     throw error;
   }
 }
@@ -138,8 +140,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         network: 'crust'
       });
 
-      cid = await uploadToCrustIPFS(content);
-      storageUrl = `https://gw.crustfiles.app/ipfs/${cid}`;
+      cid = await uploadToIPFS(content);
+      storageUrl = `https://ipfs.io/ipfs/${cid}`;
       
       console.log(`🌐 File available at: ${storageUrl}`);
       
