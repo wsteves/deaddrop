@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { put } from '@vercel/blob';
 import { sql } from '@vercel/postgres';
 
 export const config = {
@@ -166,25 +165,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         console.log(`🌐 File available at: ${storageUrl}`);
         
       } catch (ipfsError) {
-        console.error('⚠️ IPFS failed, using blob storage:', ipfsError);
-        
-        const blobResult = await put(filename, buffer, {
-          access: 'public',
-          contentType: type || 'application/octet-stream',
-        });
-        cid = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        storageUrl = blobResult.url;
-        
-        console.log(`💾 Blob storage: ${cid}`);
+        console.error('❌ IPFS upload failed:', ipfsError);
+        throw new Error(`IPFS upload failed: ${ipfsError instanceof Error ? ipfsError.message : 'Unknown error'}`);
       }
     } else {
-      const blobResult = await put(filename, buffer, {
-        access: 'public',
-        contentType: type || 'application/octet-stream',
-      });
-      
-      cid = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      storageUrl = blobResult.url;
+      return res.status(400).json({ error: 'Only IPFS storage is supported' });
     }
 
     try {
