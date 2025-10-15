@@ -21,70 +21,38 @@ interface UploadRequest {
   storageType?: 'local' | 'ipfs';
 }
 
-// Simple FormData implementation for IPFS upload
-class SimpleFormData {
-  private boundary: string;
-  private parts: Buffer[] = [];
-
-  constructor() {
-    this.boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2)}`;
-  }
-
-  append(name: string, value: Buffer | string, filename?: string) {
-    let header = `--${this.boundary}\r\n`;
-    
-    if (filename) {
-      header += `Content-Disposition: form-data; name="${name}"; filename="${filename}"\r\n`;
-      header += 'Content-Type: application/octet-stream\r\n\r\n';
-    } else {
-      header += `Content-Disposition: form-data; name="${name}"\r\n\r\n`;
-    }
-    
-    this.parts.push(Buffer.from(header));
-    this.parts.push(Buffer.isBuffer(value) ? value : Buffer.from(value));
-    this.parts.push(Buffer.from('\r\n'));
-  }
-
-  getBuffer(): Buffer {
-    const end = Buffer.from(`--${this.boundary}--\r\n`);
-    return Buffer.concat([...this.parts, end]);
-  }
-
-  getContentType(): string {
-    return `multipart/form-data; boundary=${this.boundary}`;
-  }
-}
-
-async function uploadToIPFS(content: string): Promise<string> {
-  console.log('📡 Starting IPFS upload...');
+// Upload to IPFS using Crust Network Gateway (same as your original server)
+async function uploadToCrustIPFS(content: string): Promise<string> {
+  console.log('📡 Uploading to Crust Network IPFS...');
   
-  const formData = new SimpleFormData();
-  formData.append('file', Buffer.from(content), 'data.json');
-
-  // Try web3.storage public gateway (most reliable free option)
   try {
-    const response = await fetch('https://api.web3.storage/upload', {
+    // Use Crust Network gateway - same as your original crustStorage.ts
+    const response = await fetch('https://gw.crustfiles.app/api/v0/add', {
       method: 'POST',
       headers: {
-        'Content-Type': formData.getContentType(),
+        'Content-Type': 'application/json',
       },
-      body: formData.getBuffer(),
+      body: JSON.stringify({
+        path: 'deaddrop-data.json',
+        content: content,
+      }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`IPFS upload failed: ${response.status} ${errorText}`);
+      throw new Error(`Crust upload failed: ${response.status} ${response.statusText}`);
     }
 
     const result = await response.json();
-    const cid = result.cid || result.value?.cid;
+    const cid = result.Hash || result.cid || result.path;
+    
     if (!cid) {
-      throw new Error('No CID returned from IPFS upload');
+      throw new Error('No CID returned from Crust Network');
     }
-    console.log('✅ IPFS upload successful:', cid);
+    
+    console.log(`✅ Uploaded to Crust IPFS: ${cid}`);
     return cid;
   } catch (error) {
-    console.error('❌ IPFS upload error:', error);
+    console.error('❌ Crust IPFS upload error:', error);
     throw error;
   }
 }
@@ -113,7 +81,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let signedMessage: string | undefined;
     let encrypted: boolean | undefined;
     
-    // Handle wrapped data format
+    // Handle wrapped data format from defaultStorage.store()
     if (typeof body.data === 'object' && !Array.isArray(body.data) && 'data' in body.data) {
       const wrapped = body.data;
       filename = wrapped.filename;
@@ -141,42 +109,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Missing or invalid required fields' });
     }
 
-    let cid: string;
-    let storageUrl: string | null = null;
     const buffer = Buffer.from(data);
 
-    if (storageType === 'ipfs') {
-      try {
-        console.log(`📦 Preparing ${filename} (${buffer.length} bytes) for IPFS upload...`);
-        
-        const content = JSON.stringify({
-          data: {
-            filename,
-            type,
-            size: buffer.length,
-            data: Array.from(buffer),
-            encrypted: encrypted || false,
-          },
-          signature,
-          uploadedBy,
-          signedMessage,
-          timestamp: Date.now(),
-          version: '1.0',
-        });
-
-        cid = await uploadToIPFS(content);
-        storageUrl = `https://ipfs.io/ipfs/${cid}`;
-        
-        console.log(`🌐 File available at: ${storageUrl}`);
-        
-      } catch (ipfsError) {
-        console.error('❌ IPFS upload failed:', ipfsError);
-        throw new Error(`IPFS upload failed: ${ipfsError instanceof Error ? ipfsError.message : 'Unknown error'}`);
-      }
-    } else {
+    if (storageType !== 'ipfs') {
       return res.status(400).json({ error: 'Only IPFS storage is supported' });
     }
 
+    let cid: string;
+    let storageUrl: string;
+
+    try {
+      console.log(`📦 Preparing ${filename} (${buffer.length} bytes) for IPFS upload...`);
+      
+      // Create content package (same format as original crustStorage.ts)
+      const content = JSON.stringify({
+        data: {
+          filename,
+          type,
+          size: buffer.length,
+          data: Array.from(buffer),
+          encrypted: encrypted || false,
+        },
+        signature,
+        uploadedBy,
+        signedMessage,
+        timestamp: Date.now(),
+        version: '1.0',
+        network: 'crust'
+      });
+
+      cid = await uploadToCrustIPFS(content);
+      storageUrl = `https://gw.crustfiles.app/ipfs/${cid}`;
+      
+      console.log(`🌐 File available at: ${storageUrl}`);
+      
+    } catch (ipfsError) {
+      console.error('❌ IPFS upload failed:', ipfsError);
+      throw new Error(`IPFS upload failed: ${ipfsError instanceof Error ? ipfsError.message : 'Unknown error'}`);
+    }
+
+    // Store metadata in Vercel Postgres
     try {
       await sql`
         INSERT INTO uploads (
@@ -204,8 +176,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           NOW()
         )
       `;
+      console.log(`💾 Metadata saved to database`);
     } catch (dbError) {
       console.error('⚠️ Database error:', dbError);
+      // Continue anyway - file is in IPFS
     }
 
     return res.status(200).json({ 
