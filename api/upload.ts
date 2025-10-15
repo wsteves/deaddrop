@@ -21,7 +21,41 @@ interface UploadRequest {
   storageType?: 'local' | 'ipfs';
 }
 
-// Upload to IPFS using public IPFS HTTP API
+// Simple FormData implementation for IPFS upload
+class SimpleFormData {
+  private boundary: string;
+  private parts: Buffer[] = [];
+
+  constructor() {
+    this.boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2)}`;
+  }
+
+  append(name: string, value: Buffer | string, filename?: string) {
+    let header = `--${this.boundary}\r\n`;
+    
+    if (filename) {
+      header += `Content-Disposition: form-data; name="${name}"; filename="${filename}"\r\n`;
+      header += 'Content-Type: application/octet-stream\r\n\r\n';
+    } else {
+      header += `Content-Disposition: form-data; name="${name}"\r\n\r\n`;
+    }
+    
+    this.parts.push(Buffer.from(header));
+    this.parts.push(Buffer.isBuffer(value) ? value : Buffer.from(value));
+    this.parts.push(Buffer.from('\r\n'));
+  }
+
+  getBuffer(): Buffer {
+    const end = Buffer.from(`--${this.boundary}--\r\n`);
+    return Buffer.concat([...this.parts, end]);
+  }
+
+  getContentType(): string {
+    return `multipart/form-data; boundary=${this.boundary}`;
+  }
+}
+
+// Upload to IPFS using Crust Network gateway
 async function uploadToIPFS(content: string): Promise<string> {
   console.log('📡 Starting IPFS upload to Crust Network...');
   
