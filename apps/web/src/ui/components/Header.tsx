@@ -17,7 +17,7 @@ export default function Header() {
                 </svg>
               </div>
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">DripDrop</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Dead Drop</span>
           </Link>
           <nav className="hidden md:flex gap-6 items-center text-sm font-medium">
             <Link to="/upload" className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-all hover:scale-105">
@@ -75,7 +75,7 @@ function ConnectButton() {
 
   async function handleConnect() {
     try {
-      const accs = await connectExtension('DripDrop');
+      const accs = await connectExtension('DeadDrop');
       if (accs && accs.length) {
         const a = accs[0].address;
         localStorage.setItem('walletAddress', a);

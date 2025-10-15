@@ -117,7 +117,7 @@ export default function Home() {
           {/* Main headline */}
           <h1 className="text-6xl md:text-8xl font-black tracking-tight">
             <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent animate-gradient bg-300%">
-              DripDrop
+              Dead Drop
             </span>
           </h1>
 
