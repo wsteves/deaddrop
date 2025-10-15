@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { put } from '@vercel/blob';
 import { sql } from '@vercel/postgres';
+import { create } from 'kubo-rpc-client';
 
 export const config = {
   api: {
@@ -8,6 +9,7 @@ export const config = {
       sizeLimit: '50mb',
     },
   },
+  maxDuration: 60, // 60 seconds for IPFS uploads
 };
 
 interface UploadRequest {
@@ -19,6 +21,15 @@ interface UploadRequest {
   signedMessage?: string;
   encrypted?: boolean;
   storageType: 'local' | 'ipfs';
+}
+
+// Initialize IPFS client for Crust Network
+function createIPFSClient() {
+  // Use Crust Network's IPFS gateway
+  return create({
+    url: 'https://gw.crustfiles.app/api/v0',
+    timeout: 60000, // 60 second timeout
+  });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -50,49 +61,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const buffer = Buffer.from(data);
 
     if (storageType === 'ipfs') {
-      // For IPFS, use a public gateway with the Web3.Storage API
-      // You'll need to set IPFS_API_TOKEN in Vercel env vars
-      const formData = new FormData();
-      const blob = new Blob([buffer], { type: type || 'application/octet-stream' });
-      formData.append('file', blob, filename);
+      // Upload to IPFS via Crust Network gateway (same as original server)
+      try {
+        console.log('📡 Uploading to IPFS via Crust Network...');
+        
+        const ipfsClient = createIPFSClient();
+        
+        // Create the content package (same format as original)
+        const content = JSON.stringify({
+          data: {
+            filename,
+            type,
+            size: buffer.length,
+            data: Array.from(buffer),
+            encrypted: encrypted || false,
+          },
+          signature,
+          uploadedBy,
+          signedMessage,
+          timestamp: Date.now(),
+          version: '1.0',
+        });
 
-      const ipfsApiToken = process.env.IPFS_API_TOKEN;
-      
-      if (ipfsApiToken) {
-        try {
-          const response = await fetch('https://api.web3.storage/upload', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${ipfsApiToken}`,
-            },
-            body: formData,
-          });
-
-          if (response.ok) {
-            const result = await response.json();
-            cid = result.cid;
-            storageUrl = `https://w3s.link/ipfs/${cid}`;
-          } else {
-            throw new Error('IPFS upload failed');
-          }
-        } catch (ipfsError) {
-          console.error('IPFS upload error, falling back to blob storage:', ipfsError);
-          // Fallback to blob storage
-          const blobResult = await put(filename, buffer, {
-            access: 'public',
-            contentType: type || 'application/octet-stream',
-          });
-          cid = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          storageUrl = blobResult.url;
-        }
-      } else {
-        // No IPFS token, use blob storage
+        // Upload to IPFS
+        const uploadResult = await ipfsClient.add(content);
+        cid = uploadResult.path; // This is the IPFS CID (starts with Qm...)
+        storageUrl = `https://ipfs.io/ipfs/${cid}`;
+        
+        console.log(`✅ Uploaded to IPFS: ${cid}`);
+        console.log(`🌐 Accessible at: https://ipfs.io/ipfs/${cid}`);
+        
+      } catch (ipfsError) {
+        console.error('IPFS upload error, falling back to blob storage:', ipfsError);
+        
+        // Fallback to blob storage
         const blobResult = await put(filename, buffer, {
           access: 'public',
           contentType: type || 'application/octet-stream',
         });
         cid = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         storageUrl = blobResult.url;
+        
+        console.log(`⚠️ Fell back to blob storage: ${cid}`);
       }
     } else {
       // Store in Vercel Blob Storage

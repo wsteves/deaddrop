@@ -7,3 +7,4 @@ apps/server/data/*.db
 apps/server/uploads
 *.log
 .DS_Store
+.vercel

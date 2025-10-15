@@ -89,7 +89,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
 
           if (response.ok) {
-            const arrayBuffer = await response.arrayBuffer();
+            const text = await response.text();
+            
+            // Try to parse as JSON package (new format)
+            try {
+              const jsonPackage = JSON.parse(text);
+              
+              // Check if it's the wrapped format
+              if (jsonPackage.data && jsonPackage.data.data) {
+                const fileData = jsonPackage.data;
+                return res.status(200).json({
+                  filename: fileData.filename || 'file',
+                  type: fileData.type || 'application/octet-stream',
+                  size: fileData.size || fileData.data.length,
+                  data: fileData.data,
+                  signature: jsonPackage.signature || null,
+                  uploadedBy: jsonPackage.uploadedBy || null,
+                  signedMessage: jsonPackage.signedMessage || null,
+                  encrypted: fileData.encrypted || false,
+                });
+              }
+            } catch (parseError) {
+              // Not JSON or wrong format, treat as raw binary
+              console.log('Could not parse as JSON package, treating as raw binary');
+            }
+
+            // Fallback: treat as raw binary (old format or non-wrapped data)
+            const arrayBuffer = new TextEncoder().encode(text);
             const dataArray = Array.from(new Uint8Array(arrayBuffer));
 
             // Try to get metadata from database if available
