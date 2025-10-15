@@ -1,5 +1,5 @@
 
-# DripDrop
+# DeadDrop
 
 Decentralized file and messge storing with signed messages and on-chain remarks. 
 
