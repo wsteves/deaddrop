@@ -130,6 +130,14 @@ export default function Upload() {
       const newFiles = Array.from(e.dataTransfer.files);
       setFiles(prev => [...prev, ...newFiles]);
       toast.success(`Added ${newFiles.length} ${newFiles.length === 1 ? 'file' : 'files'} to queue!`);
+      
+      // Scroll to upload button after a short delay
+      setTimeout(() => {
+        const uploadButton = document.querySelector('[data-upload-button]');
+        if (uploadButton) {
+          uploadButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
     }
   }
 
@@ -140,6 +148,14 @@ export default function Upload() {
   async function handleFilesSelected(e: React.ChangeEvent<HTMLInputElement>) {
     const chosen = Array.from(e.target.files || []);
     setFiles(prev => prev.concat(chosen));
+    
+    // Scroll to upload button after a short delay
+    setTimeout(() => {
+      const uploadButton = document.querySelector('[data-upload-button]');
+      if (uploadButton) {
+        uploadButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 300);
   }
 
   function createTextFile() {
@@ -157,6 +173,14 @@ export default function Upload() {
     setTextMessage('');
     setShowTextInput(false);
     toast.success('Text message added!');
+    
+    // Scroll to upload button after a short delay
+    setTimeout(() => {
+      const uploadButton = document.querySelector('[data-upload-button]');
+      if (uploadButton) {
+        uploadButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 300);
   }
 
   async function uploadAll() {
@@ -521,113 +545,174 @@ export default function Upload() {
           </div>
         )}
 
-        {/* Options Section */}
-        <div className="px-8 pb-6 border-t-2 border-purple-100 bg-gradient-to-br from-purple-50 to-pink-50">
-          <div className="max-w-3xl mx-auto pt-6 space-y-4">
-            {/* Password Protection */}
-            <div className="bg-white rounded-xl p-5 border-2 border-purple-200 shadow-md">
-              <label className="flex items-start gap-3 cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  checked={usePassword}
-                  onChange={(e) => {
-                    setUsePassword(e.target.checked);
-                    if (!e.target.checked) setStoreRaw(false);
-                  }}
-                  className="w-5 h-5 text-purple-600 rounded mt-1"
-                />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <svg className={`w-5 h-5 ${usePassword ? 'text-green-600' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {usePassword ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                      ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      )}
-                    </svg>
-                    <span className="font-bold text-purple-900">
-                      {usePassword ? '🔒 Password Protection Enabled' : '🌐 Public Upload'}
-                    </span>
+        {/* Storage Options Section */}
+        <div className="px-8 pb-8 pt-6 border-t-2 border-purple-100 bg-gradient-to-br from-purple-50 to-pink-50">
+          <div className="max-w-3xl mx-auto space-y-6">
+            {/* Section Header */}
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-purple-900 mb-1">📦 Storage Options</h3>
+              <p className="text-sm text-purple-600">Choose how your files will be stored on IPFS</p>
+            </div>
+
+            {/* Privacy Mode Selector */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Public Option */}
+              <button
+                onClick={() => {
+                  setUsePassword(false);
+                  setPassword('');
+                }}
+                className={`relative p-6 rounded-xl border-3 transition-all duration-300 text-left ${
+                  !usePassword
+                    ? 'border-purple-500 bg-white shadow-lg scale-105'
+                    : 'border-purple-200 bg-white hover:border-purple-300 hover:shadow-md'
+                }`}
+              >
+                {!usePassword && (
+                  <div className="absolute top-3 right-3">
+                    <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
                   </div>
-                  <p className={`text-sm ${usePassword ? 'text-green-700' : 'text-amber-700'}`}>
-                    {usePassword
-                      ? '✓ Files will be encrypted with AES-256. Only password holders can decrypt.'
-                      : '⚠ Files will be publicly accessible via IPFS gateways. Anyone with the link can read them.'}
-                  </p>
+                )}
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-purple-900 mb-1 text-lg">🌐 Public Access</h4>
+                    <p className="text-sm text-purple-700 leading-relaxed">
+                      Files accessible to anyone with the link. Best for sharing public content.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">Fast</span>
+                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">Easy Sharing</span>
+                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">No Password</span>
+                    </div>
+                  </div>
                 </div>
-              </label>
-              
-              {usePassword && (
-                <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <label className="block text-sm font-semibold text-purple-900 mb-2">Encryption Password</label>
+              </button>
+
+              {/* Private/Encrypted Option */}
+              <button
+                onClick={() => setUsePassword(true)}
+                className={`relative p-6 rounded-xl border-3 transition-all duration-300 text-left ${
+                  usePassword
+                    ? 'border-green-500 bg-white shadow-lg scale-105'
+                    : 'border-gray-200 bg-white hover:border-green-300 hover:shadow-md'
+                }`}
+              >
+                {usePassword && (
+                  <div className="absolute top-3 right-3">
+                    <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-green-900 mb-1 text-lg">🔒 Private & Encrypted</h4>
+                    <p className="text-sm text-green-700 leading-relaxed">
+                      Files encrypted with AES-256. Only password holders can access content.
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Secure</span>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Private</span>
+                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">AES-256</span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+            </div>
+
+            {/* Password Input - Animated slide-in */}
+            {usePassword && (
+              <div className="animate-slideIn">
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200 shadow-md">
+                  <div className="flex items-center gap-3 mb-4">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    <label className="text-base font-bold text-green-900">Set Encryption Password</label>
+                  </div>
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter a strong password"
-                    className="w-full border-2 border-purple-300 focus:border-purple-500 rounded-lg px-4 py-3 text-sm transition-colors"
+                    placeholder="Enter a strong password (min. 8 characters)"
+                    className="w-full border-2 border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg px-4 py-3 text-sm transition-all shadow-sm"
+                    autoFocus
                   />
-                  <p className="text-xs text-purple-600 mt-2">⚠️ Save this password! There's no recovery if you lose it.</p>
-                </div>
-              )}
-          
-            </div>
-
-            {/* Raw Storage Option - only show if not encrypted */}
-            {!usePassword && (
-              <div className="bg-white rounded-xl p-5 border-2 border-pink-200 shadow-md">
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    checked={storeRaw}
-                    onChange={(e) => setStoreRaw(e.target.checked)}
-                    className="w-5 h-5 text-pink-600 rounded mt-1"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <svg className="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-xs text-amber-800 flex items-start gap-2">
+                      <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
                       </svg>
-                      <span className="font-bold text-pink-900">Raw File Storage</span>
-                      <span className="px-2 py-0.5 bg-pink-100 text-pink-700 text-xs font-semibold rounded-full">Recommended</span>
-                    </div>
-                    <p className="text-sm text-pink-700">
-                      ✓ Store files without JSON wrapper - perfect for public plain text files<br/>
-                      ✓ Viewable directly via any IPFS gateway (ipfs.io, cloudflare, etc.)<br/>
-                      ⚠️ Metadata (signature, filename) stored separately
+                      <span><strong>Important:</strong> Save this password securely! There is no way to recover encrypted files without it.</span>
                     </p>
                   </div>
-                </label>
+                </div>
               </div>
             )}
-          </div>
 
-          {/* Upload Button */}
-          <div className="px-8 pb-8 pt-6 bg-white">
-            <div className="flex justify-center">
+            {/* Legacy Raw Storage Option - only show if public */}
+          
+
+            {/* Upload Button */}
+            <div className="pt-4" data-upload-button>
               <Button 
                 onClick={uploadAll} 
                 variant="dropout" 
                 disabled={uploading || files.length===0 || !walletAddress || (usePassword && !password)}
-                className="px-12 py-4 text-lg font-bold flex items-center gap-3 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full py-5 text-lg font-bold flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:scale-100"
               >
                 {uploading ? (
                   <>
                     <div className="animate-spin rounded-full h-6 w-6 border-3 border-white border-t-transparent"></div>
-                    <span className="text-xl">Uploading...</span>
+                    <span className="text-xl">Uploading {files.length > 0 ? `${files.length} ${files.length === 1 ? 'file' : 'files'}` : ''}...</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3v-8" />
                     </svg>
-                    <span className="text-xl">Sign & Upload {files.length > 0 ? `(${files.length})` : 'All'}</span>
-                    <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="text-xl">
+                      {files.length > 0 
+                        ? `Sign & Upload ${files.length} ${files.length === 1 ? 'File' : 'Files'}` 
+                        : 'Sign & Upload'}
+                    </span>
+                    <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
                   </>
                 )}
               </Button>
+              
+              {/* Helper text below button */}
+              {files.length > 0 && !uploading && (
+                <p className="text-center text-sm text-purple-600 mt-3">
+                  {usePassword && !password && (
+                    <span className="text-amber-600 font-medium">⚠️ Password required to upload encrypted files</span>
+                  )}
+                  {!walletAddress && (
+                    <span className="text-orange-600 font-medium">⚠️ Connect your wallet to sign files</span>
+                  )}
+                  {walletAddress && (!usePassword || password) && (
+                    <span>✨ Ready to upload to IPFS with cryptographic signature</span>
+                  )}
+                </p>
+              )}
             </div>
           </div>
         </div>
