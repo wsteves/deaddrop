@@ -325,6 +325,7 @@ export default function Upload() {
             const tx = api.tx.system.remark(remarkJson);
             
             await new Promise((resolve, reject) => {
+              // @ts-ignore - Type mismatch between @polkadot/api and @polkadot/extension-inject versions
               tx.signAndSend(walletAddress, { signer: injector.signer }, ({ status, txHash: hash }) => {
                 if (status.isInBlock || status.isFinalized) {
                   txHash = hash.toHex();
