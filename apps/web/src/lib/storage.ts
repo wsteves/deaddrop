@@ -1,5 +1,16 @@
-// Storage service for decentralized job postings
-// Now uses real Crust Network IPFS with storage orders and CRU token payments
+// Storage service for decentralized file storage
+// Updated to work with Vercel serverless API routes
+
+// Get API base URL based on environment
+const getApiBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use current origin in production, localhost in dev
+    return window.location.hostname === 'localhost' 
+      ? 'http://localhost:5173'
+      : window.location.origin;
+  }
+  return 'http://localhost:5173';
+};
 
 export interface StorageProvider {
   store(data: any): Promise<string>; // Returns content hash/ID
@@ -74,21 +85,21 @@ export class LocalStorageProvider implements StorageProvider {
   }
 }
 
-// Server-backed storage (proxies to backend which can use real IPFS)
+// Vercel API-backed storage (uses serverless functions)
 export class ServerStorageProvider implements StorageProvider {
   private baseUrl: string;
 
-  constructor(baseUrl: string = 'http://localhost:4000') {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl?: string) {
+    this.baseUrl = baseUrl || getApiBaseUrl();
   }
 
   async store(data: any): Promise<string> {
-    console.log(`📡 Sending to server: ${this.baseUrl}/api/storage/store`);
+    console.log(`📡 Sending to Vercel API: ${this.baseUrl}/api/upload`);
     
-    const response = await fetch(`${this.baseUrl}/api/storage/store`, {
+    const response = await fetch(`${this.baseUrl}/api/upload`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data })
+      body: JSON.stringify(data)
     });
     
     if (!response.ok) {
@@ -98,23 +109,25 @@ export class ServerStorageProvider implements StorageProvider {
     }
     
     const result = await response.json();
-    console.log(`🌐 Server returned IPFS CID: ${result.id}`);
-    return result.id;
+    console.log(`🌐 Server returned CID: ${result.cid}`);
+    return result.cid;
   }
 
   async retrieve(id: string): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/api/storage/retrieve/${id}`);
+    const response = await fetch(`${this.baseUrl}/api/retrieve?id=${encodeURIComponent(id)}`);
     
     if (!response.ok) {
-      throw new Error(`Retrieval failed: ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(errorText || `Retrieval failed: ${response.statusText}`);
     }
     
     const result = await response.json();
-    return result.data;
+    return result;
   }
 
   async pin(id: string): Promise<void> {
-    await fetch(`${this.baseUrl}/api/storage/pin/${id}`, { method: 'POST' });
+    // Pinning is handled automatically by Vercel Blob Storage
+    console.log(`📌 File ${id} is automatically persisted in Vercel Blob Storage`);
   }
 }
 
@@ -189,20 +202,20 @@ export class StorageManager {
   }
 }
 
-// Default storage setup
+// Default storage setup for Vercel
 export function createDefaultStorage(): StorageManager {
   const providers: StorageProvider[] = [];
 
-  // Add server provider if available
+  // Add Vercel serverless API provider
   try {
     const serverProvider = new ServerStorageProvider();
     providers.push(serverProvider);
-    console.log('✅ ServerStorageProvider initialized - will use real IPFS');
+    console.log('✅ Vercel API Provider initialized - using serverless functions + blob storage');
   } catch (error) {
-    console.warn('⚠️ Server storage not available:', error);
+    console.warn('⚠️ Vercel API storage not available:', error);
   }
 
-  // Always add local storage as fallback
+  // Always add local storage as fallback for offline use
   providers.push(new LocalStorageProvider());
   console.log(`📦 Storage providers: ${providers.map(p => p.constructor.name).join(', ')}`);
 
