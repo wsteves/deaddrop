@@ -23,11 +23,13 @@ interface UploadRequest {
   storageType?: 'local' | 'ipfs'; // Optional, defaults to IPFS
 }
 
-// Initialize IPFS client for Crust Network
+// Initialize IPFS client using public gateway
 function createIPFSClient() {
-  // Use Crust Network's IPFS gateway
+  // Use Infura public IPFS gateway (no auth required for uploads)
   return create({
-    url: 'https://gw.crustfiles.app/api/v0',
+    host: 'ipfs.infura.io',
+    port: 5001,
+    protocol: 'https',
     timeout: 60000, // 60 second timeout
   });
 }
