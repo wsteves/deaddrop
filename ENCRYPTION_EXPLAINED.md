@@ -1,4 +1,4 @@
-# DripDrop Encryption Model Explained
+# DeadDrop Encryption Model Explained
 
 ## 🔐 How Encryption Works
 

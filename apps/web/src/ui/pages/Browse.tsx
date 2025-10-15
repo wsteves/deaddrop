@@ -5,6 +5,44 @@ import toast from 'react-hot-toast';
 import QRCode from 'qrcode';
 import { decryptData } from './Upload';
 
+// Helper function to get file type info with icon and color
+function getFileTypeInfo(filename: string, mimeType: string) {
+  const ext = filename?.split('.').pop()?.toLowerCase();
+  
+  // Images
+  if (mimeType?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext || '')) {
+    return { icon: '🖼️', label: 'Image', color: 'from-blue-500 to-cyan-500', bg: 'bg-blue-900/40', border: 'border-blue-700/50', text: 'text-blue-300' };
+  }
+  
+  // Videos
+  if (mimeType?.startsWith('video/') || ['mp4', 'webm', 'mov', 'avi', 'mkv'].includes(ext || '')) {
+    return { icon: '🎬', label: 'Video', color: 'from-purple-500 to-pink-500', bg: 'bg-purple-900/40', border: 'border-purple-700/50', text: 'text-purple-300' };
+  }
+  
+  // Audio
+  if (mimeType?.startsWith('audio/') || ['mp3', 'wav', 'ogg', 'flac', 'm4a'].includes(ext || '')) {
+    return { icon: '🎵', label: 'Audio', color: 'from-pink-500 to-rose-500', bg: 'bg-pink-900/40', border: 'border-pink-700/50', text: 'text-pink-300' };
+  }
+  
+  // Documents
+  if (['pdf', 'doc', 'docx', 'txt', 'rtf'].includes(ext || '')) {
+    return { icon: '📄', label: 'Document', color: 'from-orange-500 to-amber-500', bg: 'bg-orange-900/40', border: 'border-orange-700/50', text: 'text-orange-300' };
+  }
+  
+  // Code
+  if (['js', 'ts', 'jsx', 'tsx', 'py', 'java', 'cpp', 'c', 'html', 'css', 'json', 'xml', 'sql'].includes(ext || '')) {
+    return { icon: '💻', label: 'Code', color: 'from-green-500 to-emerald-500', bg: 'bg-green-900/40', border: 'border-green-700/50', text: 'text-green-300' };
+  }
+  
+  // Archives
+  if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext || '')) {
+    return { icon: '📦', label: 'Archive', color: 'from-yellow-500 to-orange-500', bg: 'bg-yellow-900/40', border: 'border-yellow-700/50', text: 'text-yellow-300' };
+  }
+  
+  // Default
+  return { icon: '📁', label: 'File', color: 'from-purple-500 to-pink-500', bg: 'bg-purple-900/40', border: 'border-purple-700/50', text: 'text-purple-300' };
+}
+
 function RecentList({ onOpen }: { onOpen: (id: string) => void }) {
   const [items, setItems] = useState<Array<any>>([]);
   useEffect(() => {
@@ -25,10 +63,10 @@ function RecentList({ onOpen }: { onOpen: (id: string) => void }) {
       </div>
       <ul className="space-y-2">
         {items.slice(0, 5).map((it: any, idx: number) => (
-          <li key={it.id} className="group animate-slide-up" style={{ animationDelay: `${idx * 50}ms` }}>
+          <li key={`${it.id}-${idx}`} className="group animate-slide-up" style={{ animationDelay: `${idx * 50}ms` }}>
             <button
               onClick={() => onOpen(it.id)}
-              className="w-full text-left p-3 rounded-lg border border-purple-800/30 bg-purple-950/20 hover:border-purple-600/50 hover:bg-purple-900/40 transition-all hover:scale-[1.02]"
+              className="w-full text-left p-3 rounded-lg border border-purple-800/30 bg-purple-950/20 hover:border-purple-600/50 hover:bg-purple-900/40 transition-all hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20"
             >
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-md">
@@ -153,8 +191,37 @@ export default function Browse() {
       setQrGenerated(false); // Reset QR generation flag
       
     } catch (err: any) {
-      console.error(err);
-      toast.error('Failed to retrieve content');
+      console.error('Retrieve error:', err);
+      
+      // Better error messages based on the issue
+      const isLocalFile = cid && cid.startsWith('local_');
+      
+      if (isLocalFile) {
+        toast.error('File not found - local files are lost when server restarts', {
+          icon: '🔄',
+          duration: 5000,
+          style: {
+            background: 'rgba(239, 68, 68, 0.95)',
+            color: '#fff',
+            fontWeight: '600',
+          },
+        });
+      } else if (err.message?.includes('timeout') || err.message?.includes('network')) {
+        toast.error('Network error - check your connection or try a different gateway', {
+          icon: '📡',
+          duration: 5000,
+        });
+      } else if (err.message?.includes('not found') || err.status === 404) {
+        toast.error('File not found on IPFS - CID may be invalid', {
+          icon: '❌',
+          duration: 5000,
+        });
+      } else {
+        toast.error('Failed to retrieve content - ' + (err.message || 'unknown error'), {
+          icon: '⚠️',
+          duration: 5000,
+        });
+      }
     } finally { setLoading(false); }
   }
 
@@ -210,11 +277,18 @@ export default function Browse() {
     }
   }
 
-  function copyToClipboard(text: string) {
+  function copyToClipboard(text: string, message = 'Link copied to clipboard!') {
     navigator.clipboard.writeText(text).then(() => {
-      toast.success('Link copied to clipboard!');
+      toast.success(message, {
+        icon: '✨',
+        style: {
+          background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(236, 72, 153, 0.95))',
+          color: '#fff',
+          fontWeight: '600',
+        },
+      });
     }).catch(() => {
-      toast.error('Failed to copy link');
+      toast.error('Failed to copy');
     });
   }
 
@@ -265,7 +339,7 @@ export default function Browse() {
             </svg>
           </div>
           <div>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent animate-shimmer">
+            <h1 className="text-5xl font-bold text-purple-100">
               Browse Files
             </h1>
             <p className="text-purple-300 text-sm mt-1">Retrieve and view files from IPFS</p>
@@ -360,10 +434,73 @@ export default function Browse() {
             )}
 
             <div className="mt-6">
+              {/* Enhanced Empty State */}
+              {!loading && !content && !needsPassword && (
+                <div className="bg-purple-950/20 backdrop-blur-md rounded-xl p-12 border border-purple-800/30 text-center animate-slide-up">
+                  <div className="mb-6 relative">
+                    <div className="w-32 h-32 mx-auto bg-gradient-to-br from-purple-600/20 to-pink-600/20 rounded-full flex items-center justify-center animate-float">
+                      <svg className="w-16 h-16 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-20 h-20 bg-pink-500/10 rounded-full animate-ping"></div>
+                  </div>
+                  <h3 className="text-2xl font-bold text-purple-100 mb-3">Ready to Browse</h3>
+                  <p className="text-purple-300 mb-6 max-w-md mx-auto">
+                    Enter an IPFS CID or local file ID above to retrieve and view your decentralized files
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center text-sm">
+                    <span className="px-3 py-1.5 bg-purple-900/40 text-purple-200 rounded-lg border border-purple-700/50">
+                      🔍 Search by CID
+                    </span>
+                    <span className="px-3 py-1.5 bg-purple-900/40 text-purple-200 rounded-lg border border-purple-700/50">
+                      🔐 Decrypt Protected Files
+                    </span>
+                    <span className="px-3 py-1.5 bg-purple-900/40 text-purple-200 rounded-lg border border-purple-700/50">
+                      📱 Generate QR Codes
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Enhanced Loading State with Skeleton */}
               {loading && (
-                <div className="flex items-center justify-center gap-3 py-8 text-purple-300">
-                  <div className="animate-spin rounded-full h-8 w-8 border-3 border-purple-500 border-t-transparent shadow-lg"></div>
-                  <span className="font-medium">Retrieving file...</span>
+                <div className="space-y-4 animate-slide-up">
+                  {/* Skeleton for share section */}
+                  <div className="bg-purple-950/40 backdrop-blur-xl p-5 rounded-xl border border-purple-800/50 shadow-lg">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-purple-900/50 rounded-lg animate-pulse"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-purple-900/50 rounded w-32 animate-pulse"></div>
+                        <div className="h-3 bg-purple-900/30 rounded w-48 animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div className="h-12 bg-purple-900/30 rounded-lg animate-pulse"></div>
+                  </div>
+                  
+                  {/* Skeleton for file info */}
+                  <div className="bg-purple-950/40 backdrop-blur-xl p-5 rounded-xl border border-purple-800/50 shadow-lg">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 bg-purple-900/50 rounded-lg animate-pulse"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-5 bg-purple-900/50 rounded w-48 animate-pulse"></div>
+                        <div className="h-4 bg-purple-900/30 rounded w-64 animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="h-4 bg-purple-900/30 rounded w-full animate-pulse"></div>
+                      <div className="h-4 bg-purple-900/30 rounded w-3/4 animate-pulse"></div>
+                      <div className="h-32 bg-purple-900/20 rounded-xl animate-pulse mt-4"></div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-center gap-3 py-8 text-purple-300">
+                    <div className="relative">
+                      <div className="animate-spin rounded-full h-8 w-8 border-3 border-purple-500 border-t-transparent shadow-lg"></div>
+                      <div className="absolute inset-0 animate-ping rounded-full border-2 border-purple-500 opacity-20"></div>
+                    </div>
+                    <span className="font-medium">Retrieving file from IPFS...</span>
+                  </div>
                 </div>
               )}
               {content && (
@@ -399,10 +536,10 @@ export default function Browse() {
                           <Button 
                             size="sm" 
                             variant="primary" 
-                            onClick={() => copyToClipboard(qrCodeUrl)}
-                            className="whitespace-nowrap px-4 py-3 flex items-center gap-2 shadow-lg hover:shadow-pink-500/50 transition-all"
+                            onClick={() => copyToClipboard(qrCodeUrl, '✨ Link copied!')}
+                            className="group whitespace-nowrap px-4 py-3 flex items-center gap-2 shadow-lg hover:shadow-pink-500/50 transition-all hover:scale-105"
                           >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                             </svg>
                             Copy
@@ -444,8 +581,8 @@ export default function Browse() {
                                     onClick={(e) => (e.target as HTMLInputElement).select()}
                                   />
                                   <button
-                                    onClick={() => copyToClipboard(`https://ipfs.io/ipfs/${id}`)}
-                                    className="p-1.5 hover:bg-purple-900/40 rounded transition-colors"
+                                    onClick={() => copyToClipboard(`https://ipfs.io/ipfs/${id}`, '✨ Gateway link copied!')}
+                                    className="p-1.5 hover:bg-purple-900/40 rounded transition-all hover:scale-110 active:scale-95"
                                     title="Copy link"
                                   >
                                     <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -481,8 +618,8 @@ export default function Browse() {
                                       <span className="text-sm">{gateway.icon}</span>
                                       <span className="text-xs font-medium text-purple-300 flex-1">{gateway.name}</span>
                                       <button
-                                        onClick={() => copyToClipboard(gateway.url)}
-                                        className="p-1 hover:bg-purple-900/40 rounded transition-colors"
+                                        onClick={() => copyToClipboard(gateway.url, `${gateway.icon} ${gateway.name} link copied!`)}
+                                        className="p-1 hover:bg-purple-900/40 rounded transition-all hover:scale-110 active:scale-95"
                                         title="Copy"
                                       >
                                         <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -566,16 +703,27 @@ export default function Browse() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md animate-float">
-                            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            </svg>
-                          </div>
+                          {(() => {
+                            const fileType = getFileTypeInfo(content.filename || '', content.type || '');
+                            return (
+                              <div className={`w-12 h-12 bg-gradient-to-br ${fileType.color} rounded-lg flex items-center justify-center shadow-md animate-float`}>
+                                <span className="text-2xl">{fileType.icon}</span>
+                              </div>
+                            );
+                          })()}
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <h3 className="font-bold text-lg text-purple-100">{content.filename || 'Untitled'}</h3>
+                              {(() => {
+                                const fileType = getFileTypeInfo(content.filename || '', content.type || '');
+                                return (
+                                  <span className={`inline-flex items-center gap-1 px-2 py-1 ${fileType.bg} ${fileType.text} text-xs font-bold rounded-full shadow-sm border ${fileType.border}`}>
+                                    {fileType.icon} {fileType.label}
+                                  </span>
+                                );
+                              })()}
                               {content.encrypted && (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-900/40 text-green-300 text-xs font-bold rounded-full shadow-sm border border-green-700/50">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-900/40 text-green-300 text-xs font-bold rounded-full shadow-sm border border-green-700/50 animate-glow-pulse">
                                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
                                   </svg>
@@ -657,10 +805,20 @@ export default function Browse() {
                       </div>
                       <Button 
                         variant="primary" 
-                        onClick={() => downloadAsFile(content)}
-                        className="flex items-center gap-2 shadow-lg hover:shadow-pink-500/50 transition-all"
+                        onClick={() => {
+                          downloadAsFile(content);
+                          toast.success('Download started!', {
+                            icon: '⬇️',
+                            style: {
+                              background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(236, 72, 153, 0.95))',
+                              color: '#fff',
+                              fontWeight: '600',
+                            },
+                          });
+                        }}
+                        className="group flex items-center gap-2 shadow-lg hover:shadow-pink-500/50 transition-all hover:scale-105"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 group-hover:translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
                         Download
@@ -668,7 +826,7 @@ export default function Browse() {
                     </div>
 
                     {/* IPFS Storage Info */}
-                    {id && !id.startsWith('local_') && (
+                    {/* {id && !id.startsWith('local_') && (
                       <div className="mt-4 p-3 bg-blue-900/30 backdrop-blur-md border border-blue-700/50 rounded-lg">
                         <div className="flex items-start gap-2">
                           <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -686,7 +844,7 @@ export default function Browse() {
                           </div>
                         </div>
                       </div>
-                    )}
+                    )} */}
 
                     {/* Enhanced Preview Section */}
                     <div className="mt-5 pt-5 border-t border-purple-800/30">

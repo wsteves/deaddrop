@@ -246,7 +246,7 @@ export default function Upload() {
           };
 
           // Create a message to sign (hash of file metadata)
-          const message = `DripDrop Upload: ${f.name} (${f.size} bytes) at ${payload.timestamp}`;
+          const message = `DeadDrop Upload: ${f.name} (${f.size} bytes) at ${payload.timestamp}`;
           
           // Sign the message with the wallet
           toast.loading(`Signing ${f.name}...`);
