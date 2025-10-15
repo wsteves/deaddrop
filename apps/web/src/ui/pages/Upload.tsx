@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { defaultStorage } from '../../lib/storage';
 import { Button } from '../components/DesignSystem';
+import { FileCard } from '../components/FileCard';
+import { Confetti } from '../components/Confetti';
+import { SuccessModal } from '../components/SuccessModal';
 import toast from 'react-hot-toast';
 import { web3FromAddress } from '@polkadot/extension-dapp';
 import { stringToHex } from '@polkadot/util';
@@ -389,51 +392,73 @@ export default function Upload() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent flex items-center gap-3">
-          <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
-          </svg>
-          Upload to IPFS
-        </h1>
+    <div className="container mx-auto px-6 py-12">
+      {/* Confetti */}
+      <Confetti show={showCelebration} />
+      
+      {/* Success Modal */}
+      <SuccessModal 
+        show={results.length > 0 && !uploading}
+        onClose={() => setResults([])}
+        results={results}
+        walletAddress={walletAddress}
+      />
+      
+      <div className="mb-12">
+        <div className="flex items-center gap-4 mb-4 animate-in slide-up">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50 animate-float">
+            <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+            </svg>
+          </div>
+          <div>
+            <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 bg-clip-text text-transparent">
+              Upload to IPFS
+            </h1>
+            <p className="text-purple-300 text-lg">Decentralized, encrypted, and permanent storage</p>
+          </div>
+        </div>
+        
         {walletAddress ? (
-          <div className="flex items-center gap-2.5 text-sm bg-green-50 border border-green-200 rounded-lg px-4 py-2.5 inline-flex">
+          <div className="flex items-center gap-3 text-sm bg-green-500/10 border border-green-500/30 rounded-xl px-5 py-3 inline-flex backdrop-blur-sm animate-in fade-in">
             <div className="relative">
-              <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-              <div className="absolute inset-0 w-2.5 h-2.5 bg-green-500 rounded-full animate-ping"></div>
+              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+              <div className="absolute inset-0 w-3 h-3 bg-green-400 rounded-full animate-ping"></div>
             </div>
-            <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+            <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="text-green-800 font-medium">
-              Connected: <code className="text-xs bg-white px-2 py-1 rounded font-mono">{walletAddress.slice(0, 8)}...{walletAddress.slice(-6)}</code>
+            <span className="text-green-300 font-medium">
+              Connected: <code className="text-xs bg-green-500/20 px-2.5 py-1 rounded-lg font-mono text-green-200 border border-green-500/30">{walletAddress.slice(0, 8)}...{walletAddress.slice(-6)}</code>
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-2.5 text-sm bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 inline-flex">
-            <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+          <div className="flex items-center gap-3 text-sm bg-orange-500/10 border border-orange-500/30 rounded-xl px-5 py-3 inline-flex backdrop-blur-sm animate-in fade-in">
+            <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
-            <span className="font-medium text-orange-800">Connect your wallet to sign and upload files</span>
+            <span className="font-medium text-orange-300">Connect your wallet to sign and upload files</span>
           </div>
         )}
       </div>
 
-      {/* Elegant Tabbed Upload Interface */}
-      <div className="bg-white rounded-2xl shadow-2xl border-2 border-purple-100 overflow-hidden">
+      {/* Enhanced Tabbed Upload Interface */}
+      <div className="bg-purple-900/30 backdrop-blur-xl rounded-2xl shadow-2xl border border-purple-700/50 overflow-hidden animate-in zoom-in-95">
         {/* Tab Navigation */}
-        <div className="flex border-b-2 border-purple-100 bg-gradient-to-r from-purple-50 to-pink-50">
+        <div className="flex border-b border-purple-700/50 bg-purple-950/50">
           <button
             onClick={() => setShowTextInput(false)}
-            className={`flex-1 px-6 py-4 font-semibold transition-all duration-300 ${
+            className={`flex-1 px-8 py-5 font-semibold transition-all duration-300 relative ${
               !showTextInput
-                ? 'bg-white text-purple-600 border-b-4 border-purple-600 shadow-lg'
-                : 'text-purple-400 hover:text-purple-600 hover:bg-purple-50'
+                ? 'text-purple-200 bg-purple-900/40'
+                : 'text-purple-400 hover:text-purple-300 hover:bg-purple-900/20'
             }`}
           >
+            {!showTextInput && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-500 to-pink-500" />
+            )}
             <div className="flex items-center justify-center gap-3">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-6 h-6 transition-transform ${!showTextInput ? 'scale-110' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
               <span className="text-lg">Upload Files</span>
@@ -441,14 +466,17 @@ export default function Upload() {
           </button>
           <button
             onClick={() => setShowTextInput(true)}
-            className={`flex-1 px-6 py-4 font-semibold transition-all duration-300 ${
+            className={`flex-1 px-8 py-5 font-semibold transition-all duration-300 relative ${
               showTextInput
-                ? 'bg-white text-pink-600 border-b-4 border-pink-600 shadow-lg'
-                : 'text-pink-400 hover:text-pink-600 hover:bg-pink-50'
+                ? 'text-pink-200 bg-purple-900/40'
+                : 'text-purple-400 hover:text-purple-300 hover:bg-purple-900/20'
             }`}
           >
+            {showTextInput && (
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-500 to-purple-500" />
+            )}
             <div className="flex items-center justify-center gap-3">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-6 h-6 transition-transform ${showTextInput ? 'scale-110' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
               <span className="text-lg">Write Message</span>
@@ -458,43 +486,50 @@ export default function Upload() {
 
         {/* File Upload Tab */}
         {!showTextInput && (
-          <div className="p-8">
+          <div className="p-10">
             <div
               onDrop={onDrop}
               onDragOver={onDragOver}
               onDragLeave={onDragLeave}
-              className={`border-3 border-dashed rounded-2xl p-12 text-center bg-gradient-to-br transition-all duration-300 group cursor-pointer ${
+              className={`border-3 border-dashed rounded-2xl p-16 text-center transition-all duration-300 group cursor-pointer relative overflow-hidden ${
                 isDragging 
-                  ? 'border-green-500 from-green-50 via-emerald-50 to-green-50 scale-105 shadow-2xl' 
-                  : 'border-purple-300 from-purple-50 via-pink-50 to-purple-50 hover:border-purple-500'
+                  ? 'border-green-400 bg-green-500/10 scale-105 shadow-2xl shadow-green-500/50' 
+                  : 'border-purple-500/50 bg-purple-950/30 hover:border-purple-400 hover:bg-purple-950/40 animate-breathe'
               }`}
               onClick={pickFiles}
             >
-              <div className="flex flex-col items-center">
-                <div className={`w-24 h-24 rounded-2xl flex items-center justify-center mb-6 transition-all shadow-xl ${
+              {/* Animated background gradient */}
+              <div className={`absolute inset-0 bg-gradient-to-br transition-opacity duration-500 ${
+                isDragging 
+                  ? 'from-green-600/20 via-emerald-600/20 to-green-600/20 opacity-100'
+                  : 'from-purple-600/10 via-pink-600/10 to-purple-600/10 opacity-0 group-hover:opacity-100'
+              }`} />
+              
+              <div className="relative flex flex-col items-center">
+                <div className={`w-28 h-28 rounded-2xl flex items-center justify-center mb-8 transition-all shadow-2xl ${
                   isDragging 
-                    ? 'bg-gradient-to-br from-green-600 to-emerald-600 scale-125 animate-bounce' 
-                    : 'bg-gradient-to-br from-purple-600 to-pink-600 group-hover:scale-110'
+                    ? 'bg-gradient-to-br from-green-500 to-emerald-600 scale-125 animate-bounce shadow-green-500/50' 
+                    : 'bg-gradient-to-br from-purple-600 to-pink-600 group-hover:scale-110 shadow-purple-500/50'
                 }`}>
-                  <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  <svg className="w-14 h-14 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                   </svg>
                 </div>
-                <h3 className={`text-2xl font-bold mb-2 transition-colors ${
-                  isDragging ? 'text-green-900' : 'text-purple-900'
+                <h3 className={`text-3xl font-bold mb-3 transition-colors ${
+                  isDragging ? 'text-green-300' : 'text-purple-200'
                 }`}>
                   {isDragging ? '✨ Drop files now!' : 'Drop files here'}
                 </h3>
-                <p className={`mb-6 transition-colors ${
-                  isDragging ? 'text-green-700 font-semibold' : 'text-purple-600'
+                <p className={`mb-8 text-lg transition-colors ${
+                  isDragging ? 'text-green-300 font-semibold' : 'text-purple-300'
                 }`}>
                   {isDragging ? 'Release to add files to queue' : 'or click to browse your device'}
                 </p>
-                <div className={`flex items-center gap-2 text-sm transition-colors ${
-                  isDragging ? 'text-green-600' : 'text-purple-500'
+                <div className={`flex items-center gap-2.5 transition-colors ${
+                  isDragging ? 'text-green-300' : 'text-purple-400'
                 }`}>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span>Multiple files supported • Max 100MB per file</span>
                 </div>
@@ -506,37 +541,48 @@ export default function Upload() {
 
         {/* Text Message Tab */}
         {showTextInput && (
-          <div className="p-8">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          <div className="p-10">
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-pink-500/50 animate-float">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-pink-900">Write Your Message</h3>
-                  <p className="text-sm text-pink-600">Create a text file directly in the browser</p>
+                  <h3 className="text-2xl font-bold text-pink-200">Write Your Message</h3>
+                  <p className="text-purple-300">Create a text file directly in the browser</p>
                 </div>
               </div>
               
-              <textarea
-                value={textMessage}
-                onChange={(e) => setTextMessage(e.target.value)}
-                placeholder="Type your message here... It will be saved as a .txt file"
-                className="w-full h-64 border-2 border-pink-200 focus:border-pink-500 rounded-xl px-4 py-3 text-sm font-mono resize-none transition-colors shadow-inner"
-                autoFocus
-              />
+              <div className="relative">
+                <textarea
+                  value={textMessage}
+                  onChange={(e) => setTextMessage(e.target.value)}
+                  placeholder="Type your message here... It will be saved as a .txt file"
+                  className="w-full h-80 bg-purple-950/50 backdrop-blur-sm border-2 border-pink-500/30 focus:border-pink-500 hover:border-pink-500/50 rounded-xl px-5 py-4 text-purple-100 placeholder-purple-400 font-mono resize-none transition-all shadow-inner focus:shadow-lg focus:shadow-pink-500/20"
+                  autoFocus
+                />
+                <div className="absolute bottom-4 right-4 text-xs text-purple-400 pointer-events-none">
+                  {textMessage.length} characters
+                </div>
+              </div>
               
-              <div className="flex justify-end">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-purple-300 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Your message will be stored as a .txt file
+                </div>
                 <Button
                   onClick={createTextFile}
                   disabled={!textMessage.trim()}
-                  variant="primary"
-                  className="flex items-center gap-2 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 shadow-lg"
+                  variant="dropout"
+                  className="flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                   </svg>
                   Add Message to Queue
                 </Button>
@@ -546,52 +592,52 @@ export default function Upload() {
         )}
 
         {/* Storage Options Section */}
-        <div className="px-8 pb-8 pt-6 border-t-2 border-purple-100 bg-gradient-to-br from-purple-50 to-pink-50">
-          <div className="max-w-3xl mx-auto space-y-6">
+        <div className="px-10 pb-10 pt-8 border-t border-purple-700/50 bg-purple-950/30">
+          <div className="max-w-3xl mx-auto space-y-8">
             {/* Section Header */}
             <div className="text-center">
-              <h3 className="text-lg font-bold text-purple-900 mb-1">📦 Storage Options</h3>
-              <p className="text-sm text-purple-600">Choose how your files will be stored on IPFS</p>
+              <h3 className="text-2xl font-bold text-purple-200 mb-2">📦 Storage Options</h3>
+              <p className="text-purple-300">Choose how your files will be stored on IPFS</p>
             </div>
 
             {/* Privacy Mode Selector */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Public Option */}
               <button
                 onClick={() => {
                   setUsePassword(false);
                   setPassword('');
                 }}
-                className={`relative p-6 rounded-xl border-3 transition-all duration-300 text-left ${
+                className={`relative p-6 rounded-xl border-2 transition-all duration-300 text-left group ${
                   !usePassword
-                    ? 'border-purple-500 bg-white shadow-lg scale-105'
-                    : 'border-purple-200 bg-white hover:border-purple-300 hover:shadow-md'
+                    ? 'border-purple-500 bg-purple-900/40 shadow-lg shadow-purple-500/20 scale-105'
+                    : 'border-purple-700/50 bg-purple-950/30 hover:border-purple-600/50 hover:shadow-md hover:bg-purple-900/30'
                 }`}
               >
                 {!usePassword && (
-                  <div className="absolute top-3 right-3">
-                    <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  <div className="absolute top-4 right-4 animate-in zoom-in-95">
+                    <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                   </div>
                 )}
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-purple-500/50 group-hover:scale-110 transition-transform">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-bold text-purple-900 mb-1 text-lg">🌐 Public Access</h4>
-                    <p className="text-sm text-purple-700 leading-relaxed">
+                    <h4 className="font-bold text-purple-100 mb-2 text-lg">🌐 Public Access</h4>
+                    <p className="text-sm text-purple-300 leading-relaxed">
                       Files accessible to anyone with the link. Best for sharing public content.
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">Fast</span>
-                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">Easy Sharing</span>
-                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-medium">No Password</span>
+                      <span className="text-xs bg-purple-600/30 text-purple-200 px-2.5 py-1 rounded-full font-medium border border-purple-500/30">Fast</span>
+                      <span className="text-xs bg-purple-600/30 text-purple-200 px-2.5 py-1 rounded-full font-medium border border-purple-500/30">Easy Sharing</span>
+                      <span className="text-xs bg-purple-600/30 text-purple-200 px-2.5 py-1 rounded-full font-medium border border-purple-500/30">No Password</span>
                     </div>
                   </div>
                 </div>
@@ -600,36 +646,36 @@ export default function Upload() {
               {/* Private/Encrypted Option */}
               <button
                 onClick={() => setUsePassword(true)}
-                className={`relative p-6 rounded-xl border-3 transition-all duration-300 text-left ${
+                className={`relative p-6 rounded-xl border-2 transition-all duration-300 text-left group ${
                   usePassword
-                    ? 'border-green-500 bg-white shadow-lg scale-105'
-                    : 'border-gray-200 bg-white hover:border-green-300 hover:shadow-md'
+                    ? 'border-green-500 bg-green-900/40 shadow-lg shadow-green-500/20 scale-105'
+                    : 'border-purple-700/50 bg-purple-950/30 hover:border-green-600/50 hover:shadow-md hover:bg-green-900/20'
                 }`}
               >
                 {usePassword && (
-                  <div className="absolute top-3 right-3">
-                    <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  <div className="absolute top-4 right-4 animate-in zoom-in-95">
+                    <div className="w-7 h-7 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                   </div>
                 )}
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-green-500/50 group-hover:scale-110 transition-transform">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-bold text-green-900 mb-1 text-lg">🔒 Private & Encrypted</h4>
-                    <p className="text-sm text-green-700 leading-relaxed">
+                    <h4 className="font-bold text-green-200 mb-2 text-lg">🔒 Private & Encrypted</h4>
+                    <p className="text-sm text-green-300 leading-relaxed">
                       Files encrypted with AES-256. Only password holders can access content.
                     </p>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Secure</span>
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Private</span>
-                      <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">AES-256</span>
+                      <span className="text-xs bg-green-600/30 text-green-200 px-2.5 py-1 rounded-full font-medium border border-green-500/30">Secure</span>
+                      <span className="text-xs bg-green-600/30 text-green-200 px-2.5 py-1 rounded-full font-medium border border-green-500/30">Private</span>
+                      <span className="text-xs bg-green-600/30 text-green-200 px-2.5 py-1 rounded-full font-medium border border-green-500/30">AES-256</span>
                     </div>
                   </div>
                 </div>
@@ -639,27 +685,29 @@ export default function Upload() {
             {/* Password Input - Animated slide-in */}
             {usePassword && (
               <div className="animate-slideIn">
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200 shadow-md">
+                <div className="bg-gradient-to-br from-green-900/40 to-emerald-900/40 backdrop-blur-sm rounded-xl p-6 border-2 border-green-500/50 shadow-lg shadow-green-500/20">
                   <div className="flex items-center gap-3 mb-4">
-                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                    </svg>
-                    <label className="text-base font-bold text-green-900">Set Encryption Password</label>
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg shadow-green-500/50">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                      </svg>
+                    </div>
+                    <label className="text-lg font-bold text-green-200">Set Encryption Password</label>
                   </div>
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter a strong password (min. 8 characters)"
-                    className="w-full border-2 border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 rounded-lg px-4 py-3 text-sm transition-all shadow-sm"
+                    className="w-full bg-green-950/30 backdrop-blur-sm border-2 border-green-500/50 focus:border-green-400 focus:shadow-lg focus:shadow-green-500/20 rounded-lg px-5 py-3.5 text-green-100 placeholder-green-400 transition-all"
                     autoFocus
                   />
-                  <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-xs text-amber-800 flex items-start gap-2">
-                      <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <div className="mt-4 p-4 bg-amber-900/40 border border-amber-500/50 rounded-lg backdrop-blur-sm">
+                    <p className="text-sm text-amber-200 flex items-start gap-3">
+                      <svg className="w-5 h-5 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
                       </svg>
-                      <span><strong>Important:</strong> Save this password securely! There is no way to recover encrypted files without it.</span>
+                      <span><strong className="text-amber-100">Important:</strong> Save this password securely! There is no way to recover encrypted files without it.</span>
                     </p>
                   </div>
                 </div>
@@ -670,30 +718,30 @@ export default function Upload() {
           
 
             {/* Upload Button */}
-            <div className="pt-4" data-upload-button>
+            <div className="pt-6" data-upload-button>
               <Button 
                 onClick={uploadAll} 
                 variant="dropout" 
                 disabled={uploading || files.length===0 || !walletAddress || (usePassword && !password)}
-                className="w-full py-5 text-lg font-bold flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:scale-100"
+                className="w-full py-6 text-xl font-bold flex items-center justify-center gap-4 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 shadow-2xl hover:shadow-purple-500/50 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:hover:scale-100 group"
               >
                 {uploading ? (
                   <>
-                    <div className="animate-spin rounded-full h-6 w-6 border-3 border-white border-t-transparent"></div>
-                    <span className="text-xl">Uploading {files.length > 0 ? `${files.length} ${files.length === 1 ? 'file' : 'files'}` : ''}...</span>
+                    <div className="animate-spin rounded-full h-7 w-7 border-3 border-white border-t-transparent"></div>
+                    <span>Uploading {files.length > 0 ? `${files.length} ${files.length === 1 ? 'file' : 'files'}` : ''}...</span>
                   </>
                 ) : (
                   <>
-                    <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3v-8" />
+                    <svg className="w-8 h-8 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3v-8" />
                     </svg>
-                    <span className="text-xl">
+                    <span>
                       {files.length > 0 
                         ? `Sign & Upload ${files.length} ${files.length === 1 ? 'File' : 'Files'}` 
                         : 'Sign & Upload'}
                     </span>
-                    <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
                   </>
                 )}
@@ -701,17 +749,32 @@ export default function Upload() {
               
               {/* Helper text below button */}
               {files.length > 0 && !uploading && (
-                <p className="text-center text-sm text-purple-600 mt-3">
+                <div className="text-center mt-4 animate-in fade-in">
                   {usePassword && !password && (
-                    <span className="text-amber-600 font-medium">⚠️ Password required to upload encrypted files</span>
+                    <p className="text-amber-300 font-medium flex items-center justify-center gap-2 bg-amber-900/20 border border-amber-500/30 rounded-lg px-4 py-2">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                      </svg>
+                      Password required to upload encrypted files
+                    </p>
                   )}
                   {!walletAddress && (
-                    <span className="text-orange-600 font-medium">⚠️ Connect your wallet to sign files</span>
+                    <p className="text-orange-300 font-medium flex items-center justify-center gap-2 bg-orange-900/20 border border-orange-500/30 rounded-lg px-4 py-2">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                      </svg>
+                      Connect your wallet to sign files
+                    </p>
                   )}
                   {walletAddress && (!usePassword || password) && (
-                    <span>✨ Ready to upload to IPFS with cryptographic signature</span>
+                    <p className="text-green-300 font-medium flex items-center justify-center gap-2 bg-green-900/20 border border-green-500/30 rounded-lg px-4 py-2">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                      </svg>
+                      Ready to upload to IPFS with cryptographic signature
+                    </p>
                   )}
-                </p>
+                </div>
               )}
             </div>
           </div>
@@ -719,125 +782,45 @@ export default function Upload() {
       </div>
 
       {files.length > 0 && (
-        <div className="mt-6 bg-white p-5 rounded-xl border-2 border-purple-100 shadow-md">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <h3 className="font-bold text-purple-900">Upload Queue ({files.length})</h3>
+        <div className="mt-8 bg-purple-900/30 backdrop-blur-xl p-6 rounded-2xl border border-purple-700/50 shadow-lg animate-in slide-up">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/50">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-bold text-purple-100 text-lg">Upload Queue</h3>
+                <p className="text-sm text-purple-300">{files.length} {files.length === 1 ? 'file' : 'files'} ready</p>
+              </div>
             </div>
             <button
               onClick={() => setFiles([])}
-              className="text-sm text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
+              className="text-sm text-red-400 hover:text-red-300 font-medium flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-all"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
               Clear All
             </button>
           </div>
-          <ul className="space-y-3">
-            {files.map((f, i) => {
-              const progress = uploadProgress[f.name];
-              const isUploading = uploading && progress !== undefined && progress >= 0 && progress < 100;
-              const isComplete = progress === 100;
-              const isError = progress === -1;
-              
-              return (
-                <li key={i} className="group relative">
-                  <div className="flex items-center gap-3 p-3 rounded-lg border border-purple-100 hover:border-purple-300 hover:bg-purple-50 transition-all">
-                    <div className={`w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${isUploading ? 'animate-pulse' : 'group-hover:scale-110'} ${isComplete ? 'bg-gradient-to-br from-green-500 to-emerald-500' : ''} ${isError ? 'bg-gradient-to-br from-red-500 to-rose-500' : ''}`}>
-                      {isComplete ? (
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : isError ? (
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      ) : f.type === 'text/plain' && f.name.startsWith('message-') ? (
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-                        </svg>
-                      ) : (
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <div className="font-semibold text-purple-900 truncate">{f.name}</div>
-                        {f.type === 'text/plain' && f.name.startsWith('message-') && (
-                          <span className="inline-flex items-center px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
-                            💬 Text Message
-                          </span>
-                        )}
-                        {isComplete && (
-                          <span className="inline-flex items-center px-2 py-0.5 bg-green-100 text-green-700 text-xs font-bold rounded-full">
-                            ✓ Uploaded
-                          </span>
-                        )}
-                        {isError && (
-                          <span className="inline-flex items-center px-2 py-0.5 bg-red-100 text-red-700 text-xs font-bold rounded-full">
-                            ✗ Failed
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-sm text-purple-600 flex items-center gap-2">
-                        <span>{Math.round(f.size/1024)} KB</span>
-                        <span>•</span>
-                        <span>{f.type || 'unknown'}</span>
-                        {isUploading && <span className="text-purple-700 font-medium">• {progress}%</span>}
-                      </div>
-                      {/* Progress Bar */}
-                      {isUploading && (
-                        <div className="mt-2 w-full bg-purple-100 rounded-full h-2 overflow-hidden">
-                          <div 
-                            className="h-full bg-gradient-to-r from-purple-600 to-pink-600 rounded-full transition-all duration-300 ease-out"
-                            style={{ width: `${progress}%` }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    {!isUploading && !isComplete && (
-                      <button
-                        onClick={() => setFiles(files.filter((_, idx) => idx !== i))}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="Remove"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-
-      {/* Success Celebration */}
-      {showCelebration && (
-        <div className="fixed inset-0 pointer-events-none z-50 flex items-center justify-center">
-          <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-6 rounded-2xl shadow-2xl animate-bounce">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center">
-                <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold">Upload Complete!</h2>
-                <p className="text-green-100">{results.length} {results.length === 1 ? 'file' : 'files'} successfully uploaded</p>
-              </div>
-            </div>
+          <div className="space-y-3">
+            {files.map((f, i) => (
+              <FileCard
+                key={i}
+                file={f}
+                index={i}
+                progress={uploadProgress[f.name]}
+                uploading={uploading}
+                onRemove={() => setFiles(files.filter((_, idx) => idx !== i))}
+              />
+            ))}
           </div>
         </div>
       )}
+
+
 
       {results.length > 0 && (
         <div className="mt-6 bg-gradient-to-br from-green-50 via-emerald-50 to-green-50 p-6 rounded-2xl border-2 border-green-200 shadow-lg">

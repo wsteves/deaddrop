@@ -5,8 +5,8 @@ import { connectExtension } from '../../lib/polkadot';
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-purple-100 shadow-sm">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 w-full bg-purple-950/80 backdrop-blur-xl border-b border-purple-800/50 shadow-lg">
+      <div className="container mx-auto px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-6">
           <Link to="/" className="group flex items-center space-x-2.5">
             <div className="relative">
@@ -19,15 +19,15 @@ export default function Header() {
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Dead Drop</span>
           </Link>
-          <nav className="hidden md:flex gap-6 items-center text-sm font-medium">
-            <Link to="/upload" className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-all hover:scale-105">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+          <nav className="hidden md:flex gap-8 items-center text-sm font-medium">
+            <Link to="/upload" className="flex items-center gap-2 text-purple-300 hover:text-purple-100 transition-all hover:scale-105 group">
+              <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
               Upload
             </Link>
-            <Link to="/browse" className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-all hover:scale-105">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+            <Link to="/browse" className="flex items-center gap-2 text-purple-300 hover:text-purple-100 transition-all hover:scale-105 group">
+              <svg className="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               Browse
@@ -45,7 +45,7 @@ export default function Header() {
               Upload file
             </Button>
           </Link>
-          <button className="md:hidden p-2 rounded-lg bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors">
+          <button className="md:hidden p-2 rounded-lg bg-purple-900/50 text-purple-300 hover:bg-purple-800/50 hover:text-purple-100 transition-all backdrop-blur-sm border border-purple-700/50">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>

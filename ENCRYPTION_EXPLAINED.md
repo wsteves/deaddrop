@@ -30,7 +30,7 @@ When you upload a file **with "Password protect this file" checked**:
 6. 🔒 **Metadata shows `encrypted: true` on blockchain**
 
 **Encryption Details:**
-- **Algorithm**: AES-GCM-256 (military-grade encryption)
+- **Algorithm**: AES-GCM-256 
 - **Key Derivation**: PBKDF2 with 100,000 iterations
 - **Random Salt**: 16 bytes (prevents rainbow table attacks)
 - **Random IV**: 12 bytes (ensures unique encryption each time)

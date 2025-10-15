@@ -16,35 +16,35 @@ function RecentList({ onOpen }: { onOpen: (id: string) => void }) {
 
   if (!items.length) return null;
   return (
-    <div className="bg-white p-5 rounded-xl border-2 border-purple-100 shadow-md">
+    <div className="bg-purple-950/30 backdrop-blur-xl p-5 rounded-xl border border-purple-800/50 shadow-lg">
       <div className="flex items-center gap-2 mb-4">
-        <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <h3 className="font-bold text-purple-900">Recent Uploads</h3>
+        <h3 className="font-bold text-purple-100">Recent Uploads</h3>
       </div>
       <ul className="space-y-2">
-        {items.slice(0, 5).map((it: any) => (
-          <li key={it.id} className="group">
+        {items.slice(0, 5).map((it: any, idx: number) => (
+          <li key={it.id} className="group animate-slide-up" style={{ animationDelay: `${idx * 50}ms` }}>
             <button
               onClick={() => onOpen(it.id)}
-              className="w-full text-left p-3 rounded-lg border border-purple-100 hover:border-purple-300 hover:bg-purple-50 transition-all"
+              className="w-full text-left p-3 rounded-lg border border-purple-800/30 bg-purple-950/20 hover:border-purple-600/50 hover:bg-purple-900/40 transition-all hover:scale-[1.02]"
             >
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform shadow-md">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-purple-900 truncate group-hover:text-purple-600 transition-colors">
+                  <div className="font-semibold text-purple-100 truncate group-hover:text-pink-400 transition-colors">
                     {it.name}
                   </div>
-                  <div className="text-xs text-purple-600 mt-1">
+                  <div className="text-xs text-purple-400 mt-1">
                     {new Date(it.when).toLocaleDateString()} • {Math.round(it.size / 1024)} KB
                   </div>
                 </div>
-                <svg className="w-5 h-5 text-purple-400 group-hover:text-purple-600 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-purple-500 group-hover:text-pink-400 transition-colors flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
@@ -257,18 +257,18 @@ export default function Browse() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Enhanced Header */}
-      <div className="mb-8">
+      <div className="mb-8 animate-slide-up">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
-            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg animate-float">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent animate-shimmer">
               Browse Files
             </h1>
-            <p className="text-[var(--text-secondary)] text-sm">Retrieve and view files from IPFS</p>
+            <p className="text-purple-300 text-sm mt-1">Retrieve and view files from IPFS</p>
           </div>
         </div>
       </div>
@@ -276,17 +276,17 @@ export default function Browse() {
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           {/* Enhanced Search Card */}
-          <div className="bg-white p-6 rounded-xl shadow-lg border border-purple-100">
+          <div className="bg-purple-950/30 backdrop-blur-xl p-6 rounded-xl shadow-lg border border-purple-800/50 animate-slide-up" style={{ animationDelay: '100ms' }}>
             <div className="flex items-center gap-2 mb-4">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
               </svg>
-              <h3 className="font-semibold text-[var(--text-primary)]">Enter File ID or IPFS CID</h3>
+              <h3 className="font-semibold text-purple-100">Enter File ID or IPFS CID</h3>
             </div>
             <div className="flex gap-3">
               <div className="flex-1 relative">
                 <input 
-                  className="w-full border-2 border-purple-200 focus:border-purple-500 rounded-lg px-4 py-3 pr-10 font-mono text-sm transition-colors" 
+                  className="w-full bg-purple-950/30 backdrop-blur-md border-2 border-purple-800/50 focus:border-purple-500 rounded-lg px-4 py-3 pr-10 font-mono text-sm transition-all text-purple-100 placeholder-purple-500/50" 
                   placeholder="Qm... or local ID" 
                   value={id} 
                   onChange={e => setId(e.target.value)}
@@ -295,7 +295,7 @@ export default function Browse() {
                 {id && (
                   <button 
                     onClick={() => setId('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-500 hover:text-purple-300 transition-colors"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
@@ -306,7 +306,7 @@ export default function Browse() {
               <Button 
                 onClick={() => openId()} 
                 variant="primary"
-                className="px-6 flex items-center gap-2"
+                className="px-6 flex items-center gap-2 shadow-lg hover:shadow-pink-500/50 transition-all"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -317,24 +317,24 @@ export default function Browse() {
             
             {/* Password Decrypt UI */}
             {needsPassword && (
-              <div className="mt-4 p-4 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-lg shadow-sm">
+              <div className="mt-4 p-4 bg-green-900/40 backdrop-blur-md border-2 border-green-700/50 rounded-lg shadow-lg animate-bounce-in">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center shadow-md animate-glow-pulse">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-purple-900">🔒 This file is encrypted</h4>
-                    <p className="text-xs text-purple-600">AES-256-GCM encryption</p>
+                    <h4 className="font-semibold text-green-100">🔒 This file is encrypted</h4>
+                    <p className="text-xs text-green-300">AES-256-GCM encryption</p>
                   </div>
                 </div>
-                <div className="bg-purple-100 border border-purple-200 rounded p-2 mb-3">
-                  <p className="text-xs text-purple-800">
+                <div className="bg-green-950/40 backdrop-blur-sm border border-green-800/50 rounded p-2 mb-3">
+                  <p className="text-xs text-green-200">
                     ⚠️ <strong>Privacy Protected:</strong> This file is stored encrypted on IPFS. Only people with the password can decrypt and view the contents.
                   </p>
                 </div>
-                <p className="text-sm text-purple-700 mb-3 font-medium">Enter the password to decrypt and view this file</p>
+                <p className="text-sm text-green-200 mb-3 font-medium">Enter the password to decrypt and view this file</p>
                 <div className="flex gap-2">
                   <div className="flex-1 relative">
                     <input
@@ -343,13 +343,13 @@ export default function Browse() {
                       onChange={(e) => setPassword(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && decryptFile()}
                       placeholder="Enter password"
-                      className="w-full border-2 border-purple-300 focus:border-purple-500 rounded-lg px-4 py-2 pr-10 text-sm transition-colors"
+                      className="w-full bg-green-950/30 backdrop-blur-md border-2 border-green-700/50 focus:border-green-500 rounded-lg px-4 py-2 pr-10 text-sm transition-all text-green-100 placeholder-green-500/50"
                     />
-                    <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                     </svg>
                   </div>
-                  <Button onClick={decryptFile} variant="primary" className="px-6 flex items-center gap-2">
+                  <Button onClick={decryptFile} variant="primary" className="px-6 flex items-center gap-2 shadow-lg hover:shadow-green-500/50">
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                     </svg>
@@ -361,26 +361,26 @@ export default function Browse() {
 
             <div className="mt-6">
               {loading && (
-                <div className="flex items-center justify-center gap-3 py-8 text-purple-600">
-                  <div className="animate-spin rounded-full h-8 w-8 border-3 border-purple-600 border-t-transparent"></div>
+                <div className="flex items-center justify-center gap-3 py-8 text-purple-300">
+                  <div className="animate-spin rounded-full h-8 w-8 border-3 border-purple-500 border-t-transparent shadow-lg"></div>
                   <span className="font-medium">Retrieving file...</span>
                 </div>
               )}
               {content && (
-                <div className="space-y-4">
+                <div className="space-y-4 animate-slide-up">
                   {/* Enhanced Public Link & QR Code Section */}
-                  <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-purple-50 p-5 rounded-xl border-2 border-purple-200 shadow-md">
+                  <div className="bg-purple-950/40 backdrop-blur-xl p-5 rounded-xl border border-purple-800/50 shadow-lg">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center shadow-md">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center shadow-md animate-float">
                             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                             </svg>
                           </div>
                           <div>
-                            <h4 className="font-bold text-purple-900">Share This File</h4>
-                            <p className="text-xs text-purple-600">Copy link or scan QR code</p>
+                            <h4 className="font-bold text-purple-100">Share This File</h4>
+                            <p className="text-xs text-purple-400">Copy link or scan QR code</p>
                           </div>
                         </div>
                         
@@ -389,7 +389,7 @@ export default function Browse() {
                             <input 
                               readOnly 
                               value={qrCodeUrl} 
-                              className="w-full text-sm bg-white border-2 border-purple-300 rounded-lg px-4 py-3 pr-12 font-mono text-purple-700 shadow-sm"
+                              className="w-full text-sm bg-purple-950/30 backdrop-blur-md border-2 border-purple-700/50 rounded-lg px-4 py-3 pr-12 font-mono text-purple-200 shadow-sm"
                               onClick={(e) => (e.target as HTMLInputElement).select()}
                             />
                             <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -400,7 +400,7 @@ export default function Browse() {
                             size="sm" 
                             variant="primary" 
                             onClick={() => copyToClipboard(qrCodeUrl)}
-                            className="whitespace-nowrap px-4 py-3 flex items-center gap-2 shadow-md hover:shadow-lg transition-shadow"
+                            className="whitespace-nowrap px-4 py-3 flex items-center gap-2 shadow-lg hover:shadow-pink-500/50 transition-all"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -411,7 +411,7 @@ export default function Browse() {
                             size="sm" 
                             variant="ghost" 
                             onClick={toggleQR}
-                            className="whitespace-nowrap px-4 py-3 flex items-center gap-2 hover:bg-purple-100 transition-colors"
+                            className="whitespace-nowrap px-4 py-3 flex items-center gap-2 hover:bg-purple-900/40 transition-colors text-purple-200"
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
@@ -422,42 +422,42 @@ export default function Browse() {
 
                         {/* Enhanced IPFS Gateway Links */}
                         {id && !id.startsWith('local_') && (
-                          <div className="mt-4 pt-4 border-t border-purple-200">
+                          <div className="mt-4 pt-4 border-t border-purple-800/30">
                             <div className="flex items-center gap-2 mb-3">
-                              <svg className="w-4 h-4 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                              <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd"/>
                               </svg>
-                              <span className="text-xs font-bold text-purple-900 uppercase tracking-wide">IPFS Gateways</span>
+                              <span className="text-xs font-bold text-purple-200 uppercase tracking-wide">IPFS Gateways</span>
                             </div>
                             <div className="space-y-2">
                               {/* Primary Gateway - ipfs.io */}
-                              <div className="bg-white rounded-lg p-2 border border-purple-200">
+                              <div className="bg-purple-950/30 backdrop-blur-md rounded-lg p-2 border border-purple-800/30">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <span className="text-xs font-semibold text-purple-700">Primary:</span>
-                                  <span className="text-xs text-purple-600">ipfs.io</span>
+                                  <span className="text-xs font-semibold text-purple-300">Primary:</span>
+                                  <span className="text-xs text-purple-400">ipfs.io</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <input 
                                     readOnly 
                                     value={`https://ipfs.io/ipfs/${id}`}
-                                    className="flex-1 text-xs bg-purple-50 border border-purple-200 rounded px-2 py-1.5 font-mono text-purple-700"
+                                    className="flex-1 text-xs bg-purple-950/40 border border-purple-800/50 rounded px-2 py-1.5 font-mono text-purple-200"
                                     onClick={(e) => (e.target as HTMLInputElement).select()}
                                   />
                                   <button
                                     onClick={() => copyToClipboard(`https://ipfs.io/ipfs/${id}`)}
-                                    className="p-1.5 hover:bg-purple-100 rounded transition-colors"
+                                    className="p-1.5 hover:bg-purple-900/40 rounded transition-colors"
                                     title="Copy link"
                                   >
-                                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                     </svg>
                                   </button>
                                   <button
                                     onClick={() => window.open(`https://ipfs.io/ipfs/${id}`, '_blank')}
-                                    className="p-1.5 hover:bg-purple-100 rounded transition-colors"
+                                    className="p-1.5 hover:bg-purple-900/40 rounded transition-colors"
                                     title="Open in new tab"
                                   >
-                                    <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                     </svg>
                                   </button>
@@ -465,7 +465,7 @@ export default function Browse() {
                               </div>
                               {/* Alternative Gateways */}
                               <details className="group">
-                                <summary className="cursor-pointer text-xs font-medium text-purple-600 hover:text-purple-800 flex items-center gap-2 py-2">
+                                <summary className="cursor-pointer text-xs font-medium text-purple-400 hover:text-purple-200 flex items-center gap-2 py-2">
                                   <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"/>
                                   </svg>
@@ -477,24 +477,24 @@ export default function Browse() {
                                     { name: 'dweb.link', url: `https://dweb.link/ipfs/${id}`, icon: '🌐' },
                                     { name: 'ipfs.eth.aragon', url: `https://ipfs.eth.aragon.network/ipfs/${id}`, icon: '🔷' }
                                   ].map((gateway, i) => (
-                                    <div key={i} className="bg-white rounded p-2 border border-purple-100 flex items-center gap-2">
+                                    <div key={i} className="bg-purple-950/30 backdrop-blur-md rounded p-2 border border-purple-800/30 flex items-center gap-2">
                                       <span className="text-sm">{gateway.icon}</span>
-                                      <span className="text-xs font-medium text-purple-700 flex-1">{gateway.name}</span>
+                                      <span className="text-xs font-medium text-purple-300 flex-1">{gateway.name}</span>
                                       <button
                                         onClick={() => copyToClipboard(gateway.url)}
-                                        className="p-1 hover:bg-purple-100 rounded transition-colors"
+                                        className="p-1 hover:bg-purple-900/40 rounded transition-colors"
                                         title="Copy"
                                       >
-                                        <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                         </svg>
                                       </button>
                                       <button
                                         onClick={() => window.open(gateway.url, '_blank')}
-                                        className="p-1 hover:bg-purple-100 rounded transition-colors"
+                                        className="p-1 hover:bg-purple-900/40 rounded transition-colors"
                                         title="Open"
                                       >
-                                        <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
                                       </button>
@@ -510,26 +510,26 @@ export default function Browse() {
 
                     {/* Enhanced QR Code Display */}
                     {showQR && (
-                      <div className="mt-4 bg-white rounded-xl p-6 border-2 border-purple-200 shadow-lg animate-fadeIn">
+                      <div className="mt-4 bg-purple-950/50 backdrop-blur-xl rounded-xl p-6 border border-purple-700/50 shadow-lg animate-bounce-in">
                         <div className="flex flex-col items-center">
                           <div className="flex items-center gap-2 mb-3">
-                            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                             </svg>
-                            <h4 className="font-bold text-purple-900">Scan QR Code</h4>
+                            <h4 className="font-bold text-purple-100">Scan QR Code</h4>
                           </div>
-                          <p className="text-xs text-purple-600 mb-4 text-center">Scan with your phone to quickly access this file</p>
+                          <p className="text-xs text-purple-300 mb-4 text-center">Scan with your phone to quickly access this file</p>
                           
-                          <div className="bg-gradient-to-br from-purple-100 to-pink-100 p-4 rounded-xl border-2 border-purple-300 relative">
+                          <div className="bg-white p-4 rounded-xl border-2 border-purple-600/50 relative shadow-lg">
                             {!qrGenerated && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 rounded-xl">
+                              <div className="absolute inset-0 flex items-center justify-center bg-purple-950/80 backdrop-blur-sm rounded-xl">
                                 <div className="flex flex-col items-center gap-2">
-                                  <div className="animate-spin rounded-full h-8 w-8 border-3 border-purple-600 border-t-transparent"></div>
-                                  <span className="text-sm text-purple-600 font-medium">Generating QR...</span>
+                                  <div className="animate-spin rounded-full h-8 w-8 border-3 border-purple-400 border-t-transparent shadow-lg"></div>
+                                  <span className="text-sm text-purple-200 font-medium">Generating QR...</span>
                                 </div>
                               </div>
                             )}
-                            <canvas ref={canvasRef} className="rounded-lg shadow-md" />
+                            <canvas ref={canvasRef} className="rounded-lg" />
                           </div>
                           
                           <div className="flex gap-3 mt-4">
@@ -537,7 +537,7 @@ export default function Browse() {
                               size="sm" 
                               variant="primary" 
                               onClick={downloadQR}
-                              className="flex items-center gap-2"
+                              className="flex items-center gap-2 shadow-lg hover:shadow-pink-500/50"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -548,7 +548,7 @@ export default function Browse() {
                               size="sm" 
                               variant="ghost" 
                               onClick={() => setShowQR(false)}
-                              className="flex items-center gap-2"
+                              className="flex items-center gap-2 text-purple-200 hover:bg-purple-900/40"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -562,20 +562,20 @@ export default function Browse() {
                   </div>
 
                   {/* Enhanced File Info Section */}
-                  <div className="bg-white p-5 rounded-xl border-2 border-purple-100 shadow-md">
+                  <div className="bg-purple-950/40 backdrop-blur-xl p-5 rounded-xl border border-purple-800/50 shadow-lg">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
+                          <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md animate-float">
                             <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                             </svg>
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-bold text-lg text-[var(--text-primary)]">{content.filename || 'Untitled'}</h3>
+                              <h3 className="font-bold text-lg text-purple-100">{content.filename || 'Untitled'}</h3>
                               {content.encrypted && (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full shadow-sm">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-900/40 text-green-300 text-xs font-bold rounded-full shadow-sm border border-green-700/50">
                                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
                                   </svg>
@@ -583,7 +583,7 @@ export default function Browse() {
                                 </span>
                               )}
                             </div>
-                            <div className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
+                            <div className="flex items-center gap-3 text-sm text-purple-300">
                               <span className="flex items-center gap-1">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -597,7 +597,7 @@ export default function Browse() {
                                 {content.size ? Math.round(content.size/1024) + ' KB' : 'Unknown size'}
                               </span>
                               {content.encrypted && (
-                                <span className="flex items-center gap-1 text-green-600 font-medium">
+                                <span className="flex items-center gap-1 text-green-400 font-medium">
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                   </svg>
@@ -608,33 +608,33 @@ export default function Browse() {
                           </div>
                         </div>
                         {content.uploadedBy && (
-                          <div className="text-xs text-[var(--text-muted)] mt-1 flex items-center gap-1">
+                          <div className="text-xs text-purple-400 mt-1 flex items-center gap-1">
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                             </svg>
-                            Uploaded by: <code className="text-xs">{content.uploadedBy.slice(0, 8)}...{content.uploadedBy.slice(-6)}</code>
+                            Uploaded by: <code className="text-xs text-pink-400">{content.uploadedBy.slice(0, 8)}...{content.uploadedBy.slice(-6)}</code>
                           </div>
                         )}
                         {content.signature && (
-                          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="mt-3 p-3 bg-green-900/30 backdrop-blur-md border border-green-700/50 rounded-lg">
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
-                                  <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                   </svg>
-                                  <span className="font-semibold text-green-900 text-sm">Cryptographically Signed</span>
+                                  <span className="font-semibold text-green-200 text-sm">Cryptographically Signed</span>
                                 </div>
-                                <div className="text-xs text-green-700 mb-2">
+                                <div className="text-xs text-green-300 mb-2">
                                   <div className="font-medium">Signature:</div>
-                                  <code className="text-xs bg-white px-2 py-1 rounded border border-green-200 break-all">
+                                  <code className="text-xs bg-green-950/30 px-2 py-1 rounded border border-green-800/50 break-all text-green-200">
                                     {content.signature}
                                   </code>
                                 </div>
                                 {content.signedMessage && (
-                                  <div className="text-xs text-green-700">
+                                  <div className="text-xs text-green-300">
                                     <div className="font-medium">Signed Message:</div>
-                                    <code className="text-xs bg-white px-2 py-1 rounded border border-green-200 break-all">
+                                    <code className="text-xs bg-green-950/30 px-2 py-1 rounded border border-green-800/50 break-all text-green-200">
                                       {content.signedMessage}
                                     </code>
                                   </div>
@@ -646,7 +646,7 @@ export default function Browse() {
                                   variant="ghost"
                                   onClick={() => window.open(`https://westend.subscan.io/account/${content.uploadedBy}`, '_blank')}
                                   title="View signer on Subscan"
-                                  className="whitespace-nowrap text-xs"
+                                  className="whitespace-nowrap text-xs text-green-300 hover:bg-green-900/30"
                                 >
                                   🔍 View on Subscan
                                 </Button>
@@ -658,7 +658,7 @@ export default function Browse() {
                       <Button 
                         variant="primary" 
                         onClick={() => downloadAsFile(content)}
-                        className="flex items-center gap-2 shadow-md hover:shadow-lg transition-shadow"
+                        className="flex items-center gap-2 shadow-lg hover:shadow-pink-500/50 transition-all"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -669,12 +669,12 @@ export default function Browse() {
 
                     {/* IPFS Storage Info */}
                     {id && !id.startsWith('local_') && (
-                      <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="mt-4 p-3 bg-blue-900/30 backdrop-blur-md border border-blue-700/50 rounded-lg">
                         <div className="flex items-start gap-2">
-                          <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
                           </svg>
-                          <div className="flex-1 text-xs text-blue-800">
+                          <div className="flex-1 text-xs text-blue-200">
                             <p className="font-semibold mb-1">📦 IPFS Storage Format</p>
                             <p className="mb-2">
                               Files on IPFS are stored with metadata (signature, timestamp, encryption status). 
@@ -689,16 +689,16 @@ export default function Browse() {
                     )}
 
                     {/* Enhanced Preview Section */}
-                    <div className="mt-5 pt-5 border-t-2 border-purple-100">
+                    <div className="mt-5 pt-5 border-t border-purple-800/30">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                          <h4 className="font-bold text-purple-900">File Preview</h4>
+                          <h4 className="font-bold text-purple-100">File Preview</h4>
                           {content.isWrapped && (
-                            <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 font-semibold rounded-full">
+                            <span className="text-xs px-2 py-0.5 bg-blue-900/40 text-blue-300 font-semibold rounded-full border border-blue-700/50">
                               📦 Unwrapped
                             </span>
                           )}
@@ -711,7 +711,7 @@ export default function Browse() {
                               const url = URL.createObjectURL(blob);
                               window.open(url, '_blank');
                             }}
-                            className="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors flex items-center gap-1"
+                            className="text-xs px-3 py-1 bg-purple-900/40 text-purple-200 rounded-lg hover:bg-purple-800/60 transition-colors flex items-center gap-1 border border-purple-700/50"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -724,7 +724,7 @@ export default function Browse() {
                         // Smart preview based on content type and data
                         if (!content.data || !Array.isArray(content.data)) {
                           return (
-                            <div className="bg-gray-100 text-gray-600 p-4 rounded-xl text-sm text-center border-2 border-gray-200">
+                            <div className="bg-purple-950/20 text-purple-400 p-4 rounded-xl text-sm text-center border border-purple-800/30">
                               No preview available
                             </div>
                           );
@@ -733,7 +733,7 @@ export default function Browse() {
                         // Image preview
                         if (content.type && content.type.startsWith('image/')) {
                           return (
-                            <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-xl border-2 border-purple-200">
+                            <div className="bg-purple-950/30 backdrop-blur-md p-4 rounded-xl border border-purple-800/50">
                               <img 
                                 src={URL.createObjectURL(new Blob([new Uint8Array(content.data)]))} 
                                 alt="preview" 
@@ -790,18 +790,18 @@ export default function Browse() {
                               return (
                                 <div className="space-y-4">
                                   <div className="mb-2 flex items-center gap-2">
-                                    <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 font-semibold rounded-full">
+                                    <span className="text-xs px-2 py-1 bg-orange-900/40 text-orange-300 font-semibold rounded-full border border-orange-700/50">
                                       🌐 HTML Document
                                     </span>
                                   </div>
 
                                   {/* HTML Rendered Preview */}
-                                  <div className="bg-white p-4 rounded-xl border-2 border-purple-200 shadow-inner">
+                                  <div className="bg-purple-950/20 backdrop-blur-md p-4 rounded-xl border border-purple-800/50 shadow-inner">
                                     <div className="flex items-center justify-between mb-2">
-                                      <h5 className="font-semibold text-purple-900 text-sm">Live Preview</h5>
+                                      <h5 className="font-semibold text-purple-100 text-sm">Live Preview</h5>
                                       <button
                                         onClick={() => window.open(htmlUrl, '_blank')}
-                                        className="text-xs px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1"
+                                        className="text-xs px-3 py-1 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1 shadow-md"
                                       >
                                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
@@ -812,11 +812,11 @@ export default function Browse() {
                                     
                                     {/* Warning for external dependencies */}
                                     {(text.includes('cdn.') || text.includes('unpkg.') || text.includes('jsdelivr') || text.includes('THREE')) && (
-                                      <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
-                                        <svg className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                      <div className="mb-3 p-2 bg-yellow-900/30 backdrop-blur-md border border-yellow-700/50 rounded-lg flex items-start gap-2">
+                                        <svg className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                           <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
                                         </svg>
-                                        <p className="text-xs text-yellow-800">
+                                        <p className="text-xs text-yellow-200">
                                           <strong>Note:</strong> This HTML uses external libraries. If it doesn't work in preview, click "Open Full Page" for best results.
                                         </p>
                                       </div>
@@ -824,7 +824,7 @@ export default function Browse() {
 
                                     <iframe 
                                       src={htmlUrl}
-                                      className="w-full border-2 border-gray-300 rounded-lg bg-white"
+                                      className="w-full border-2 border-purple-700/50 rounded-lg bg-white"
                                       style={{ height: '600px' }}
                                       title="HTML Preview"
                                       allow="accelerometer; camera; encrypted-media; geolocation; gyroscope; microphone; midi; clipboard-read; clipboard-write"
@@ -833,14 +833,14 @@ export default function Browse() {
 
                                   {/* HTML Source Code */}
                                   <details className="group">
-                                    <summary className="cursor-pointer text-sm font-medium text-purple-600 hover:text-purple-800 flex items-center gap-2 py-2">
+                                    <summary className="cursor-pointer text-sm font-medium text-purple-400 hover:text-purple-200 flex items-center gap-2 py-2">
                                       <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"/>
                                       </svg>
                                       View HTML Source Code
                                     </summary>
                                     <div className="mt-2">
-                                      <div className="bg-gray-900 text-green-400 p-4 rounded-xl font-mono text-xs overflow-auto max-h-96 shadow-inner border-2 border-purple-200 whitespace-pre-wrap break-words">
+                                      <div className="bg-gray-900 text-green-400 p-4 rounded-xl font-mono text-xs overflow-auto max-h-96 shadow-inner border border-purple-800/50 whitespace-pre-wrap break-words">
                                         {text}
                                       </div>
                                     </div>
@@ -864,12 +864,12 @@ export default function Browse() {
                               <div>
                                 {isJson && (
                                   <div className="mb-2 flex items-center gap-2">
-                                    <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 font-semibold rounded-full">
+                                    <span className="text-xs px-2 py-1 bg-yellow-900/40 text-yellow-300 font-semibold rounded-full border border-yellow-700/50">
                                       📄 JSON Format
                                     </span>
                                   </div>
                                 )}
-                                <div className="bg-gray-900 text-green-400 p-4 rounded-xl font-mono text-sm overflow-auto max-h-96 shadow-inner border-2 border-purple-200 whitespace-pre-wrap break-words">
+                                <div className="bg-gray-900 text-green-400 p-4 rounded-xl font-mono text-sm overflow-auto max-h-96 shadow-inner border border-purple-800/50 whitespace-pre-wrap break-words">
                                   {displayText}
                                 </div>
                               </div>
@@ -881,19 +881,19 @@ export default function Browse() {
 
                         // Binary/Unknown preview - show metadata
                         return (
-                          <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border-2 border-gray-200">
-                            <div className="text-center text-gray-600 mb-3">
-                              <svg className="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="bg-purple-950/20 backdrop-blur-md p-4 rounded-xl border border-purple-800/50">
+                            <div className="text-center text-purple-300 mb-3">
+                              <svg className="w-12 h-12 mx-auto mb-2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                               </svg>
                               <p className="font-semibold">Binary file - No preview available</p>
                               <p className="text-xs mt-1">Download to view content</p>
                             </div>
-                            <div className="bg-white p-3 rounded-lg text-xs font-mono">
-                              <div className="text-gray-700">
+                            <div className="bg-purple-950/40 backdrop-blur-md p-3 rounded-lg text-xs font-mono border border-purple-800/30">
+                              <div className="text-purple-200">
                                 <strong>File Info:</strong>
                               </div>
-                              <div className="mt-2 space-y-1 text-gray-600">
+                              <div className="mt-2 space-y-1 text-purple-400">
                                 <div>• Name: {content.filename}</div>
                                 <div>• Type: {content.type}</div>
                                 <div>• Size: {content.size ? Math.round(content.size/1024) + ' KB' : 'Unknown'}</div>
@@ -914,28 +914,28 @@ export default function Browse() {
         {/* Enhanced Sidebar */}
         <div className="space-y-6">
           {/* Quick Tips Card */}
-          <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-5 rounded-xl border-2 border-purple-200 shadow-md">
+          <div className="bg-purple-950/40 backdrop-blur-xl p-5 rounded-xl border border-purple-800/50 shadow-lg animate-slide-up" style={{ animationDelay: '200ms' }}>
             <div className="flex items-center gap-2 mb-3">
-              <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-purple-400 animate-glow-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 className="font-bold text-purple-900">Quick Tips</h3>
+              <h3 className="font-bold text-purple-100">Quick Tips</h3>
             </div>
-            <ul className="space-y-2 text-sm text-purple-700">
+            <ul className="space-y-2 text-sm text-purple-300">
               <li className="flex items-start gap-2">
-                <span className="text-purple-500 mt-0.5">💡</span>
+                <span className="text-purple-400 mt-0.5">💡</span>
                 <span>Enter any IPFS CID (starting with Qm...)</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-pink-500 mt-0.5">🔒</span>
+                <span className="text-pink-400 mt-0.5">🔒</span>
                 <span>Encrypted files require the password</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-purple-500 mt-0.5">📱</span>
+                <span className="text-purple-400 mt-0.5">📱</span>
                 <span>Use QR codes for quick mobile access</span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-pink-500 mt-0.5">🌐</span>
+                <span className="text-pink-400 mt-0.5">🌐</span>
                 <span>Multiple IPFS gateways for reliability</span>
               </li>
             </ul>
