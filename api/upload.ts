@@ -82,8 +82,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Invalid data format' });
     }
     
-    // Default to IPFS storage (not local!)
-    const storageType = body.storageType || 'ipfs';
+    // Temporarily use blob storage only to debug
+    const storageType = 'local'; // body.storageType || 'ipfs';
 
     if (!filename || !data || !Array.isArray(data)) {
       return res.status(400).json({ error: 'Missing or invalid required fields' });
@@ -95,60 +95,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Convert array of numbers to Buffer
     const buffer = Buffer.from(data);
 
-    if (storageType === 'ipfs') {
-      // Upload to IPFS via Crust Network gateway (same as original server)
-      try {
-        console.log('📡 Uploading to IPFS via Crust Network...');
-        
-        const ipfsClient = createIPFSClient();
-        
-        // Create the content package (same format as original)
-        const content = JSON.stringify({
-          data: {
-            filename,
-            type,
-            size: buffer.length,
-            data: Array.from(buffer),
-            encrypted: encrypted || false,
-          },
-          signature,
-          uploadedBy,
-          signedMessage,
-          timestamp: Date.now(),
-          version: '1.0',
-        });
+    console.log(`� Storing file: ${filename}, size: ${buffer.length} bytes`);
 
-        // Upload to IPFS
-        const uploadResult = await ipfsClient.add(content);
-        cid = uploadResult.path; // This is the IPFS CID (starts with Qm...)
-        storageUrl = `https://ipfs.io/ipfs/${cid}`;
-        
-        console.log(`✅ Uploaded to IPFS: ${cid}`);
-        console.log(`🌐 Accessible at: https://ipfs.io/ipfs/${cid}`);
-        
-      } catch (ipfsError) {
-        console.error('IPFS upload error, falling back to blob storage:', ipfsError);
-        
-        // Fallback to blob storage
-        const blobResult = await put(filename, buffer, {
-          access: 'public',
-          contentType: type || 'application/octet-stream',
-        });
-        cid = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        storageUrl = blobResult.url;
-        
-        console.log(`⚠️ Fell back to blob storage: ${cid}`);
-      }
-    } else {
-      // Store in Vercel Blob Storage
-      const blobResult = await put(filename, buffer, {
-        access: 'public',
-        contentType: type || 'application/octet-stream',
-      });
-      
-      cid = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      storageUrl = blobResult.url;
-    }
+    // Store in Vercel Blob Storage
+    const blobResult = await put(filename, buffer, {
+      access: 'public',
+      contentType: type || 'application/octet-stream',
+    });
+    
+    cid = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    storageUrl = blobResult.url;
+    
+    console.log(`✅ Stored in blob: ${cid}, URL: ${storageUrl}`);
 
     // Store metadata in Vercel Postgres
     try {
