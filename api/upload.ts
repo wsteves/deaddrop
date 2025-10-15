@@ -14,13 +14,13 @@ export const config = {
 
 interface UploadRequest {
   filename: string;
-  data: number[];
+  data: number[] | { data: number[]; filename: string; type: string; [key: string]: any };
   type: string;
   signature?: string;
   uploadedBy?: string;
   signedMessage?: string;
   encrypted?: boolean;
-  storageType: 'local' | 'ipfs';
+  storageType?: 'local' | 'ipfs'; // Optional, defaults to IPFS
 }
 
 // Initialize IPFS client for Crust Network
@@ -48,7 +48,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const body = req.body as UploadRequest;
-    const { filename, data, type, signature, uploadedBy, signedMessage, encrypted, storageType } = body;
+    
+    // Handle both direct upload and wrapped data
+    let filename: string;
+    let data: number[];
+    let type: string;
+    let signature: string | undefined;
+    let uploadedBy: string | undefined;
+    let signedMessage: string | undefined;
+    let encrypted: boolean | undefined;
+    
+    // Check if data is wrapped (from defaultStorage.store)
+    if (typeof body.data === 'object' && !Array.isArray(body.data) && 'data' in body.data) {
+      const wrapped = body.data;
+      filename = wrapped.filename;
+      data = wrapped.data;
+      type = wrapped.type;
+      signature = wrapped.signature || body.signature;
+      uploadedBy = wrapped.uploadedBy || body.uploadedBy;
+      signedMessage = wrapped.signedMessage || body.signedMessage;
+      encrypted = wrapped.encrypted || body.encrypted;
+    } else if (Array.isArray(body.data)) {
+      filename = body.filename;
+      data = body.data;
+      type = body.type;
+      signature = body.signature;
+      uploadedBy = body.uploadedBy;
+      signedMessage = body.signedMessage;
+      encrypted = body.encrypted;
+    } else {
+      return res.status(400).json({ error: 'Invalid data format' });
+    }
+    
+    // Default to IPFS storage (not local!)
+    const storageType = body.storageType || 'ipfs';
 
     if (!filename || !data || !Array.isArray(data)) {
       return res.status(400).json({ error: 'Missing or invalid required fields' });
