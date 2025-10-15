@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from './DesignSystem';
+import { DeadDropLogo } from './DeadDropLogo';
 import { connectExtension } from '../../lib/polkadot';
 
 export default function Header() {
@@ -8,16 +9,8 @@ export default function Header() {
     <header className="sticky top-0 z-50 w-full bg-purple-950/80 backdrop-blur-xl border-b border-purple-800/50 shadow-lg">
       <div className="container mx-auto px-6 py-4 flex items-center justify-between gap-4">
         <div className="flex items-center gap-6">
-          <Link to="/" className="group flex items-center space-x-2.5">
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg blur-sm opacity-60 group-hover:opacity-100 transition-opacity" />
-              <div className="relative w-9 h-9 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                </svg>
-              </div>
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Dead Drop</span>
+          <Link to="/" className="group">
+            <DeadDropLogo size="md" animated={true} showText={true} />
           </Link>
           <nav className="hidden md:flex gap-8 items-center text-sm font-medium">
             <Link to="/upload" className="flex items-center gap-2 text-purple-300 hover:text-purple-100 transition-all hover:scale-105 group">

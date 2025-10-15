@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { DeadDropLogo } from '../components/DeadDropLogo';
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -100,17 +101,12 @@ export default function Home() {
         <div className="max-w-4xl mx-auto text-center space-y-8 relative">
           
           {/* Logo/Icon */}
-          <div className="flex justify-center mb-8">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-3xl blur-2xl opacity-60 group-hover:opacity-90 animate-pulse" />
-              <div className="relative bg-gradient-to-br from-purple-600 via-pink-600 to-purple-700 p-8 rounded-3xl shadow-2xl border border-purple-400/20 backdrop-blur-sm">
-                <svg className="w-20 h-20 text-white drop-shadow-2xl" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.8}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                </svg>
-                {/* Decorative droplets */}
-                <div className="absolute -top-2 -left-2 w-4 h-4 bg-purple-400 rounded-full opacity-60 animate-ping" />
-                <div className="absolute -bottom-2 -right-2 w-3 h-3 bg-pink-400 rounded-full opacity-60 animate-ping" style={{animationDelay: '0.5s'}} />
-              </div>
+          <div className="flex justify-center mb-12">
+            <div className="relative">
+              {/* Multiple glow rings for enhanced effect */}
+              <div className="absolute inset-0 -m-12 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500 rounded-full opacity-20 blur-3xl animate-pulse" />
+              <div className="absolute inset-0 -m-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full opacity-30 blur-2xl" style={{animation: 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite'}} />
+              <DeadDropLogo size="xl" animated={true} showText={false} />
             </div>
           </div>
 
