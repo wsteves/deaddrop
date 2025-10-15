@@ -61,8 +61,9 @@ async function uploadToIPFS(content: string): Promise<string> {
   const formData = new SimpleFormData();
   formData.append('file', Buffer.from(content), 'data.json');
 
+  // Try web3.storage public gateway (most reliable free option)
   try {
-    const response = await fetch('https://ipfs.infura.io:5001/api/v0/add', {
+    const response = await fetch('https://api.web3.storage/upload', {
       method: 'POST',
       headers: {
         'Content-Type': formData.getContentType(),
@@ -76,8 +77,12 @@ async function uploadToIPFS(content: string): Promise<string> {
     }
 
     const result = await response.json();
-    console.log('✅ IPFS upload successful:', result.Hash);
-    return result.Hash;
+    const cid = result.cid || result.value?.cid;
+    if (!cid) {
+      throw new Error('No CID returned from IPFS upload');
+    }
+    console.log('✅ IPFS upload successful:', cid);
+    return cid;
   } catch (error) {
     console.error('❌ IPFS upload error:', error);
     throw error;
