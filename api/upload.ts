@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { sql } from '@vercel/postgres';
+import { ethers } from 'ethers';
 
 export const config = {
   api: {
@@ -55,40 +56,72 @@ class SimpleFormData {
   }
 }
 
-// Upload to IPFS using Crust Network gateway
-async function uploadToIPFS(content: string): Promise<string> {
-  console.log('📡 Starting IPFS upload to Crust Network...');
+// Create Web3 authentication for Crust Network (same as original)
+async function createCrustAuth(): Promise<string> {
+  // Use environment variable if available, otherwise create temporary wallet
+  const privateKey = process.env.CRUST_AUTH_PRIVATE_KEY || ethers.Wallet.createRandom().privateKey;
+  const wallet = new ethers.Wallet(privateKey);
   
-  const formData = new SimpleFormData();
-  formData.append('file', Buffer.from(content), 'data.json');
+  // Sign wallet address with private key
+  const signature = await wallet.signMessage(wallet.address);
+  
+  // Create auth header: eth-<address>:<signature>
+  const authHeaderRaw = `eth-${wallet.address}:${signature}`;
+  const authHeader = Buffer.from(authHeaderRaw).toString('base64');
+  
+  return `Basic ${authHeader}`;
+}
 
+// Upload to Crust Network IPFS (same as original server)
+async function uploadToCrustIPFS(content: string): Promise<string> {
+  console.log('📡 Uploading to Crust Network IPFS...');
+  
   try {
-    // Use Crust Network IPFS gateway (same as your original Rocky testnet setup)
-    const response = await fetch('https://gw.crustfiles.app/api/v0/add', {
+    // Create Web3 authentication header
+    const authHeader = await createCrustAuth();
+    
+    // Create multipart form data for IPFS
+    const boundary = `----WebKitFormBoundary${Math.random().toString(36).substring(2)}`;
+    
+    const formParts = [
+      `------${boundary}`,
+      'Content-Disposition: form-data; name="file"; filename="deaddrop-data.json"',
+      'Content-Type: application/json',
+      '',
+      content,
+      `------${boundary}--`,
+      ''
+    ];
+    
+    const body = formParts.join('\r\n');
+    
+    // Upload to Crust Network gateway (Rocky testnet)
+    const response = await fetch('https://gw.crustfiles.app/api/v0/add?pin=true', {
       method: 'POST',
       headers: {
-        'Content-Type': formData.getContentType(),
+        'Authorization': authHeader,
+        'Content-Type': `multipart/form-data; boundary=----${boundary}`,
       },
-      body: formData.getBuffer(),
+      body: body,
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Crust IPFS upload failed: ${response.status}`, errorText);
-      throw new Error(`IPFS upload failed: ${response.status} ${errorText}`);
+      throw new Error(`Crust upload failed: ${response.status} ${errorText}`);
     }
 
     const result = await response.json();
-    const cid = result.Hash;
+    const cid = result.Hash || result.cid;
     
     if (!cid) {
-      throw new Error('No CID returned from IPFS upload');
+      throw new Error('No CID returned from Crust Network');
     }
     
-    console.log('✅ IPFS upload successful to Crust Network:', cid);
+    console.log(`✅ Uploaded to Crust IPFS: ${cid}`);
     return cid;
+    
   } catch (error) {
-    console.error('❌ IPFS upload error:', error);
+    console.error('❌ Crust IPFS upload error:', error);
     throw error;
   }
 }
@@ -174,8 +207,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         network: 'crust'
       });
 
-      cid = await uploadToIPFS(content);
-      storageUrl = `https://ipfs.io/ipfs/${cid}`;
+      cid = await uploadToCrustIPFS(content);
+      storageUrl = `https://gw.crustfiles.app/ipfs/${cid}`;
       
       console.log(`🌐 File available at: ${storageUrl}`);
       
