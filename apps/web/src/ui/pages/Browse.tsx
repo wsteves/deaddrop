@@ -331,18 +331,18 @@ export default function Browse() {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Enhanced Header */}
-      <div className="mb-8 animate-slide-up">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-14 h-14 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg animate-float">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      <div className="mb-12">
+        <div className="flex items-center gap-4 mb-4 animate-in slide-up">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/50 animate-float">
+            <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           <div>
-            <h1 className="text-5xl font-bold text-purple-100">
+            <h1 className="text-5xl font-bold mb-2 bg-gradient-to-r from-purple-300 via-pink-300 to-purple-300 bg-clip-text text-transparent">
               Browse Files
             </h1>
-            <p className="text-purple-300 text-sm mt-1">Retrieve and view files from IPFS</p>
+            <p className="text-purple-300 text-lg">Retrieve and view files from IPFS</p>
           </div>
         </div>
       </div>
